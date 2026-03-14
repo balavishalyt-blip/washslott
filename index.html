@@ -301,7 +301,6 @@ const SLOTS = [
 ];
 
 function App() {
-    // WIPED DATA: Transitioned to v12 Session and collections
     const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('ws_elite_v12_session')));
     const [step, setStep] = useState(user ? 'app' : 'login'); 
     const [view, setView] = useState('home');
@@ -493,11 +492,23 @@ function App() {
     const secureSlot = async (time) => {
         if(isPassed(selDate, time)) return setAlert("Slot passed.");
         
-        // LIMIT: Max 3 slots per day PER ROOM
-        const roomDayBookings = bookings.filter(b => b.room === user.room && b.date === selDate);
-        if(roomDayBookings.length >= 3) return setAlert("Room limit: Max 3 slots/day per room.");
+        // Personal Daily Limit: 1 slot per member per day
+        if(myBookings.some(b => b.date === selDate)) {
+            return setAlert("Personal Daily Limit: Only 1 slot per day allowed.");
+        }
 
-        // LIMIT: Max 2 consecutive slots PER ROOM
+        // Personal Weekly Limit: Max 3 slots per member per week
+        const startOfWeek = new Date(); startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+        const weekCount = myBookings.filter(b => b.date >= startOfWeek.toISOString().split('T')[0]).length;
+        if(weekCount >= 3) {
+            return setAlert("Personal Weekly Limit: Maximum 3 slots per week allowed.");
+        }
+
+        // Room Daily Limit: Max 3 slots per day PER ROOM
+        const roomDayBookings = bookings.filter(b => b.room === user.room && b.date === selDate);
+        if(roomDayBookings.length >= 3) return setAlert("Room Limit: Max 3 slots/day per room.");
+
+        // Room Consecutive Limit: Max 2 consecutive slots PER ROOM
         const currentIdx = SLOTS.indexOf(time);
         const hasPrev = roomDayBookings.some(b => SLOTS.indexOf(b.time) === currentIdx - 1);
         const hasPrevPrev = roomDayBookings.some(b => SLOTS.indexOf(b.time) === currentIdx - 2);
@@ -505,12 +516,8 @@ function App() {
         const hasNextNext = roomDayBookings.some(b => SLOTS.indexOf(b.time) === currentIdx + 2);
 
         if((hasPrev && hasPrevPrev) || (hasPrev && hasNext) || (hasNext && hasNextNext)) {
-            return setAlert("Fair use policy: No more than 2 consecutive slots per room.");
+            return setAlert("Fair Use Policy: No more than 2 consecutive slots per room.");
         }
-
-        const startOfWeek = new Date(); startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
-        const weekCount = myBookings.filter(b => b.date >= startOfWeek.toISOString().split('T')[0]).length;
-        if(weekCount >= 5) return setAlert("Weekly limit reached.");
 
         setLoading(true);
         try {
@@ -550,7 +557,7 @@ function App() {
                 step === 'signup' && [
                     React.createElement('div', {className:'input-group', key:'n'},
                         React.createElement('span', {className:'input-label'}, 'FULL NAME'),
-                        React.createElement('input', {className:'modern-input', placeholder:'John Doe', value:name, onChange:e=>setName(e.target.value)})
+                        React.createElement('input', {className:'modern-input', placeholder:'Resident Name', value:name, onChange:e=>setName(e.target.value)})
                     ),
                     React.createElement('div', {className:'input-group', key:'r'},
                         React.createElement('span', {className:'input-label'}, 'ROOM ASSIGNMENT'),
@@ -732,7 +739,7 @@ function App() {
                 React.createElement('button', {key:'ub', className:'btn-prime', onClick:async ()=> {
                     if(!isRoomValid(room)) return setAlert("Invalid Room. Allowed: Ground (001), Floors 1-5 (X01-X06).");
                     setLoading(true);
-                    await db.collection('users_v8').doc(user.email).update({ name, room });
+                    await db.collection('users_v7').doc(user.email).update({ name, room });
                     setLoading(false);
                     setIsEditing(false);
                 }}, loading ? 'Updating...' : 'Save & Sync'),
