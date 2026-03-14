@@ -290,8 +290,7 @@ const SLOTS = [
 ];
 
 function App() {
-    // FRESH START: v10 System Wipe
-    const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('ws_elite_v10_session')));
+    const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('ws_elite_v11_session')));
     const [step, setStep] = useState(user ? 'app' : 'login'); 
     const [view, setView] = useState('home');
     const [bookings, setBookings] = useState([]);
@@ -310,20 +309,20 @@ function App() {
     const [alert, setAlert] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
 
-    // Sync Fresh Collections (v10 Bookings, v6 Users)
+    // Sync Fresh Collections (v11 Bookings, v7 Users)
     useEffect(() => {
-        const unsubBookings = db.collection('bookings_v10').onSnapshot(s => {
+        const unsubBookings = db.collection('bookings_v11').onSnapshot(s => {
             setBookings(s.docs.map(d => ({ id: d.id, ...d.data() })));
         });
 
         let unsubUser = () => {};
         if (user?.email) {
-            unsubUser = db.collection('users_v6').doc(user.email).onSnapshot(doc => {
+            unsubUser = db.collection('users_v7').doc(user.email).onSnapshot(doc => {
                 if (doc.exists) {
                     const data = doc.data();
                     const updatedUser = { ...user, ...data };
                     setUser(updatedUser);
-                    localStorage.setItem('ws_elite_v10_session', JSON.stringify(updatedUser));
+                    localStorage.setItem('ws_elite_v11_session', JSON.stringify(updatedUser));
                 }
             });
         }
@@ -373,6 +372,7 @@ function App() {
         return () => clearInterval(timer);
     }, [bookings, user]);
 
+    // Helpers
     const getSlotRange = (timeStr) => {
         const now = new Date();
         const [time, period] = timeStr.split(' ');
@@ -382,6 +382,21 @@ function App() {
         const start = new Date(now); start.setHours(hours, minutes, 0, 0);
         const end = new Date(start.getTime() + 90 * 60000);
         return [start, end];
+    };
+
+    // Room Validation Helper
+    const isRoomValid = (r) => {
+        const num = parseInt(r);
+        if (isNaN(num)) return false;
+        // Ground Floor
+        if (num === 1) return true;
+        // Floors 1-5
+        const floor = Math.floor(num / 100);
+        const roomInFloor = num % 100;
+        if (floor >= 1 && floor <= 5) {
+            if (roomInFloor >= 1 && roomInFloor <= 6) return true;
+        }
+        return false;
     };
 
     const requestNotifications = async () => {
@@ -424,11 +439,12 @@ function App() {
             .sort((a,b) => (a.date + a.time).localeCompare(b.date + b.time))[0];
     }, [myBookings, todayStr]);
 
+    // Actions
     const handleInitialAccess = async () => {
         if(!email) return setAlert("Access ID required");
         setLoading(true);
         try {
-            const userRef = await db.collection('users_v6').doc(email).get();
+            const userRef = await db.collection('users_v7').doc(email).get();
             if(userRef.exists) {
                 const data = userRef.data();
                 setRoom(data.room); setName(data.name || 'Resident');
@@ -439,6 +455,9 @@ function App() {
     };
 
     const sendVerification = async () => {
+        if(step === 'signup' && !isRoomValid(room)) {
+            return setAlert("Invalid Room. Allowed: Ground (001), Floors 1-5 (X01-X06).");
+        }
         setLoading(true);
         const code = Math.floor(100000 + Math.random() * 900000).toString();
         setGenOtp(code);
@@ -452,23 +471,38 @@ function App() {
     const confirmIdentity = async () => {
         if(otp === genOtp || otp === '000000') {
             const profile = { email, room, name };
-            await db.collection('users_v6').doc(email).set(profile);
+            await db.collection('users_v7').doc(email).set(profile);
             setUser(profile);
-            localStorage.setItem('ws_elite_v10_session', JSON.stringify(profile));
+            localStorage.setItem('ws_elite_v11_session', JSON.stringify(profile));
             setStep('app');
         } else setAlert("Invalid verification");
     };
 
     const secureSlot = async (time) => {
         if(isPassed(selDate, time)) return setAlert("Slot passed.");
-        if(myBookings.some(b => b.date === selDate)) return setAlert("Limit: 1 slot/day.");
+        
+        // LIMIT: Max 3 slots per day PER ROOM
+        const roomDayBookings = bookings.filter(b => b.room === user.room && b.date === selDate);
+        if(roomDayBookings.length >= 3) return setAlert("Room Limit Reached: Max 3 slots/day per room.");
+
+        // LIMIT: Max 2 consecutive slots PER ROOM
+        const currentIdx = SLOTS.indexOf(time);
+        const hasPrev = roomDayBookings.some(b => SLOTS.indexOf(b.time) === currentIdx - 1);
+        const hasPrevPrev = roomDayBookings.some(b => SLOTS.indexOf(b.time) === currentIdx - 2);
+        const hasNext = roomDayBookings.some(b => SLOTS.indexOf(b.time) === currentIdx + 1);
+        const hasNextNext = roomDayBookings.some(b => SLOTS.indexOf(b.time) === currentIdx + 2);
+
+        if((hasPrev && hasPrevPrev) || (hasPrev && hasNext) || (hasNext && hasNextNext)) {
+            return setAlert("Machine Policy: No more than 2 consecutive slots for one room.");
+        }
+
         const startOfWeek = new Date(); startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
         const weekCount = myBookings.filter(b => b.date >= startOfWeek.toISOString().split('T')[0]).length;
-        if(weekCount >= 3) return setAlert("Weekly limit reached.");
+        if(weekCount >= 5) return setAlert("Personal Weekly Limit Reached.");
 
         setLoading(true);
         try {
-            await db.collection('bookings_v10').add({
+            await db.collection('bookings_v11').add({
                 email: user.email, name: user.name, room: user.room,
                 date: selDate, time, timestamp: Date.now()
             });
@@ -480,7 +514,7 @@ function App() {
     const cancelSlot = async (id) => {
         setLoading(true);
         try {
-            await db.collection('bookings_v10').doc(id).delete();
+            await db.collection('bookings_v11').doc(id).delete();
             setAlert("Slot freed.");
         } catch(e) { setAlert("Error."); }
         finally { setLoading(false); }
@@ -492,7 +526,7 @@ function App() {
                 React.createElement('div', {className:'auth-hero'},
                     React.createElement('div', {className:'auth-logo-icon'}, '🫧'),
                     React.createElement('h1', {style:{fontSize:40, fontWeight:800, letterSpacing:'-1.5px'}}, 'Washslott'),
-                    React.createElement('p', {style:{color:'var(--text-dim)', marginTop:12, fontSize:16}}, 'Order in the Laundry Room.')
+                    React.createElement('p', {style:{color:'var(--text-dim)', marginTop:12, fontSize:16}}, 'Elite Management. No Wars.')
                 ),
                 step === 'login' && [
                     React.createElement('div', {className:'input-group', key:'e'},
@@ -508,7 +542,7 @@ function App() {
                     ),
                     React.createElement('div', {className:'input-group', key:'r'},
                         React.createElement('span', {className:'input-label'}, 'ROOM ASSIGNMENT'),
-                        React.createElement('input', {className:'modern-input', placeholder:'e.g. 104', value:room, onChange:e=>setRoom(e.target.value)})
+                        React.createElement('input', {className:'modern-input', placeholder:'e.g. 001, 102, 506', value:room, onChange:e=>setRoom(e.target.value)})
                     ),
                     React.createElement('button', {key:'b', className:'btn-prime', onClick:sendVerification, disabled:loading}, 'Register & Secure')
                 ],
@@ -561,12 +595,12 @@ function App() {
                     ])
                 ] : [
                     React.createElement('h2', {key:'t', style:{fontSize:28, fontWeight:800}}, 'Laundry Ready'),
-                    React.createElement('p', {key:'p', style:{color:'var(--text-dim)', marginTop:8, fontSize:15}}, 'Pick a date to secure your slot.')
+                    React.createElement('p', {key:'p', style:{color:'var(--text-dim)', marginTop:8, fontSize:15}}, 'Choose a date to book a 90min cycle.')
                 ])
             ),
 
             React.createElement('div', {key:'q', className:'queue-section'},
-                React.createElement('div', {className:'grid-header'}, '🔥 LIVE LINEUP'),
+                React.createElement('div', {className:'grid-header'}, '🔥 TODAY\'S LINEUP'),
                 dayBookingsSorted.length === 0 ? 
                     React.createElement('p', {style:{fontSize:12, color:'var(--text-dim)', padding:'10px 0'}}, 'Lineup empty for today.') :
                     React.createElement('div', {className:'queue-list'}, dayBookingsSorted.map(b => 
@@ -663,7 +697,7 @@ function App() {
                     ),
                     React.createElement('div', {className:'mini-stat'},
                         React.createElement('span', {className:'mini-stat-val', style:{color: notifState === 'granted' ? 'var(--success)' : 'var(--danger)'}}, notifState === 'granted' ? 'LIVE' : 'OFF'),
-                        React.createElement('span', {className:'mini-stat-label'}, 'Status')
+                        React.createElement('span', {className:'mini-stat-label'}, 'Alerts')
                     )
                 ),
 
@@ -684,8 +718,9 @@ function App() {
                     React.createElement('input', {className:'modern-input', value:room, onChange:e=>setRoom(e.target.value)})
                 ),
                 React.createElement('button', {key:'ub', className:'btn-prime', onClick:async ()=> {
+                    if(!isRoomValid(room)) return setAlert("Invalid Room. Allowed: Ground (001), Floors 1-5 (X01-X06).");
                     setLoading(true);
-                    await db.collection('users_v6').doc(user.email).update({ name, room });
+                    await db.collection('users_v7').doc(user.email).update({ name, room });
                     setLoading(false);
                     setIsEditing(false);
                 }}, loading ? 'Updating...' : 'Save & Sync'),
