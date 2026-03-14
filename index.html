@@ -58,6 +58,7 @@
             padding-bottom: 110px;
         }
 
+        /* Auth Screen */
         .auth-container {
             padding: 40px 32px;
             display: flex;
@@ -88,9 +89,11 @@
             letter-spacing: 0.8px; z-index: 10;
         }
 
+        /* Header */
         .header { padding: 24px 20px; display: flex; justify-content: space-between; align-items: center; }
         .brand-text { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 22px; letter-spacing: -1px; text-transform: uppercase; }
         
+        /* Hero Banner */
         .hero-banner {
             margin: 0 20px 24px;
             background: linear-gradient(165deg, #1F2937 0%, #0B0E14 100%);
@@ -122,6 +125,7 @@
         .timer-display { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 48px; letter-spacing: -2px; color: var(--text); }
         .timer-label { font-size: 12px; font-weight: 800; color: var(--text-dim); text-transform: uppercase; margin-top: -5px; }
 
+        /* Date Selection */
         .date-strip { display: flex; gap: 14px; overflow-x: auto; padding: 0 20px 28px; scrollbar-width: none; }
         .date-strip::-webkit-scrollbar { display: none; }
         .date-card {
@@ -137,6 +141,7 @@
         }
         .date-card.active span { color: var(--surface) !important; }
 
+        /* Lineup */
         .queue-section { padding: 0 20px 24px; }
         .queue-list { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: none; }
         .queue-pill {
@@ -146,6 +151,7 @@
         .queue-pill.highlight { border-color: var(--accent); background: rgba(167, 139, 250, 0.05); }
         .queue-avatar { width: 24px; height: 24px; background: var(--accent-dark); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; }
 
+        /* Grid */
         .grid-header { padding: 0 22px 18px; font-size: 13px; font-weight: 800; color: var(--text-dim); display: flex; justify-content: space-between; align-items: center; text-transform: uppercase; letter-spacing: 1px; }
         .slots-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; padding: 0 20px; }
         .slot-card {
@@ -167,13 +173,7 @@
             max-width: 100%;
         }
 
-        .cancel-label {
-            position: absolute; top: 12px; right: 12px;
-            color: var(--danger); font-size: 9px; font-weight: 800;
-            padding: 4px 8px; background: rgba(255, 77, 77, 0.1);
-            border-radius: 8px; cursor: pointer;
-        }
-
+        /* Nav */
         .navigation-bar {
             position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
             width: 100%; max-width: 440px; height: 95px; background: var(--glass);
@@ -187,42 +187,68 @@
         }
         .nav-link.active { color: var(--accent); }
 
+        /* Profile & Edit UI */
+        .profile-container { padding: 24px; }
+        .resident-card {
+            background: linear-gradient(135deg, #1F2937, #111827);
+            border-radius: 32px; padding: 40px 24px; border: 1px solid var(--border);
+            position: relative; overflow: hidden; text-align: center; margin-bottom: 24px;
+        }
+        .resident-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 6px; background: var(--accent); }
+        .profile-avatar-xl {
+            width: 100px; height: 100px; border-radius: 40px; background: var(--accent);
+            display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;
+            font-size: 40px; font-weight: 800; color: var(--surface); box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        }
+        
+        .action-row { display: flex; gap: 12px; margin-bottom: 24px; }
+        .action-chip {
+            flex: 1; background: var(--card); border: 1px solid var(--border);
+            padding: 18px; border-radius: 20px; display: flex; flex-direction: column;
+            align-items: center; gap: 8px; cursor: pointer; transition: 0.2s;
+        }
+        .action-chip:active { transform: scale(0.95); background: #1a222d; }
+        .action-chip i { color: var(--accent); }
+        .action-label { font-size: 11px; font-weight: 800; color: var(--text-dim); text-transform: uppercase; }
+
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 32px; }
+        .mini-stat {
+            background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+            padding: 16px; border-radius: 18px; display: flex; flex-direction: column; gap: 4px;
+        }
+        .mini-stat-val { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 20px; }
+        .mini-stat-label { font-size: 10px; font-weight: 800; color: var(--text-dim); text-transform: uppercase; }
+
+        .logout-panel {
+            border-top: 1px solid var(--border); padding-top: 24px; margin-top: 20px;
+        }
+        .btn-danger-outline {
+            width: 100%; background: transparent; border: 1.5px solid rgba(255, 77, 77, 0.3);
+            color: var(--danger); padding: 20px; border-radius: 20px;
+            font-weight: 800; font-size: 15px; display: flex; align-items: center;
+            justify-content: center; gap: 10px; cursor: pointer; transition: 0.3s;
+        }
+        .btn-danger-outline:active { background: rgba(255, 77, 77, 0.1); border-color: var(--danger); }
+
+        /* Unified Cancel Button - Optimized for Mobile */
+        .btn-cancel-action {
+            -webkit-appearance: none; appearance: none;
+            background: rgba(255, 77, 77, 0.08); color: var(--danger);
+            border: 1px solid rgba(255, 77, 77, 0.3); padding: 12px 24px;
+            border-radius: 16px; font-weight: 800; font-size: 12px;
+            cursor: pointer; transition: 0.2s; display: inline-flex;
+            align-items: center; justify-content: center; gap: 8px;
+            text-transform: uppercase; letter-spacing: 1px; min-width: 160px;
+            margin-top: 20px; outline: none;
+        }
+        .btn-cancel-action:active { background: rgba(255, 77, 77, 0.2); transform: scale(0.96); }
+
         .btn-prime { 
             background: var(--accent); color: var(--surface); border: none; 
             padding: 20px; border-radius: 18px; font-weight: 800; 
             font-size: 16px; width: 100%; cursor: pointer; transition: 0.3s;
         }
-
-        /* Improved Cancel Button Style for Mobile */
-        .btn-ghost-danger {
-            -webkit-appearance: none;
-            appearance: none;
-            background: rgba(255, 77, 77, 0.05);
-            color: var(--danger);
-            border: 1px solid rgba(255, 77, 77, 0.4);
-            padding: 12px 24px;
-            border-radius: 16px;
-            font-weight: 700;
-            font-size: 12px;
-            cursor: pointer;
-            transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            margin-top: 20px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            white-space: nowrap;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            width: auto;
-            min-width: 160px;
-        }
-        .btn-ghost-danger:active {
-            background: rgba(255, 77, 77, 0.15);
-            transform: scale(0.96);
-            border-color: var(--danger);
-        }
-
+        
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.92); backdrop-filter: blur(12px); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 24px; }
         .modal-content { 
             background: var(--card); border-radius: 36px; padding: 40px 32px; 
@@ -264,7 +290,8 @@ const SLOTS = [
 ];
 
 function App() {
-    const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('ws_elite_v9_session')));
+    // FRESH START: v10 System Wipe
+    const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('ws_elite_v10_session')));
     const [step, setStep] = useState(user ? 'app' : 'login'); 
     const [view, setView] = useState('home');
     const [bookings, setBookings] = useState([]);
@@ -283,27 +310,27 @@ function App() {
     const [alert, setAlert] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
 
-    // Sync Fresh Collections (v9 Bookings, v5 Users)
+    // Sync Fresh Collections (v10 Bookings, v6 Users)
     useEffect(() => {
-        const unsubBookings = db.collection('bookings_v9').onSnapshot(s => {
+        const unsubBookings = db.collection('bookings_v10').onSnapshot(s => {
             setBookings(s.docs.map(d => ({ id: d.id, ...d.data() })));
         });
 
         let unsubUser = () => {};
         if (user?.email) {
-            unsubUser = db.collection('users_v5').doc(user.email).onSnapshot(doc => {
+            unsubUser = db.collection('users_v6').doc(user.email).onSnapshot(doc => {
                 if (doc.exists) {
                     const data = doc.data();
                     const updatedUser = { ...user, ...data };
                     setUser(updatedUser);
-                    localStorage.setItem('ws_elite_v9_session', JSON.stringify(updatedUser));
+                    localStorage.setItem('ws_elite_v10_session', JSON.stringify(updatedUser));
                 }
             });
         }
         return () => { unsubBookings(); unsubUser(); };
     }, [user?.email]);
 
-    // TIMER & NOTIFICATION LOGIC
+    // Timer & Notifications
     useEffect(() => {
         const timer = setInterval(() => {
             if (!user) return;
@@ -358,15 +385,10 @@ function App() {
     };
 
     const requestNotifications = async () => {
-        if (!("Notification" in window)) return setAlert("This browser doesn't support notifications.");
-        try {
-            const permission = await Notification.requestPermission();
-            setNotifState(permission);
-            if (permission === 'granted') setAlert("Notifications Enabled! We'll alert you 10 mins before slots.");
-            else setAlert("Notifications were denied. Please check your browser settings.");
-        } catch(e) {
-            setAlert("Error requesting notifications.");
-        }
+        if (!("Notification" in window)) return setAlert("Browser not supported.");
+        const permission = await Notification.requestPermission();
+        setNotifState(permission);
+        if (permission === 'granted') setAlert("Notifications Enabled!");
     };
 
     const sendNotification = (title, body) => {
@@ -406,13 +428,13 @@ function App() {
         if(!email) return setAlert("Access ID required");
         setLoading(true);
         try {
-            const userRef = await db.collection('users_v5').doc(email).get();
+            const userRef = await db.collection('users_v6').doc(email).get();
             if(userRef.exists) {
                 const data = userRef.data();
                 setRoom(data.room); setName(data.name || 'Resident');
                 sendVerification();
             } else setStep('signup');
-        } catch(e) { setAlert("Network error"); }
+        } catch(e) { setAlert("Sync error"); }
         finally { setLoading(false); }
     };
 
@@ -423,18 +445,18 @@ function App() {
         try {
             await emailjs.send(CONFIG.emailjs.service, CONFIG.emailjs.template, { to_email: email, otp: code });
             setStep('verify');
-        } catch(e) { setAlert("Verification code: " + code); setStep('verify'); }
+        } catch(e) { setAlert("Demo Code: " + code); setStep('verify'); }
         finally { setLoading(false); }
     };
 
     const confirmIdentity = async () => {
         if(otp === genOtp || otp === '000000') {
             const profile = { email, room, name };
-            await db.collection('users_v5').doc(email).set(profile);
+            await db.collection('users_v6').doc(email).set(profile);
             setUser(profile);
-            localStorage.setItem('ws_elite_v9_session', JSON.stringify(profile));
+            localStorage.setItem('ws_elite_v10_session', JSON.stringify(profile));
             setStep('app');
-        } else setAlert("Invalid code");
+        } else setAlert("Invalid verification");
     };
 
     const secureSlot = async (time) => {
@@ -446,11 +468,11 @@ function App() {
 
         setLoading(true);
         try {
-            await db.collection('bookings_v9').add({
+            await db.collection('bookings_v10').add({
                 email: user.email, name: user.name, room: user.room,
                 date: selDate, time, timestamp: Date.now()
             });
-            setAlert("Slot secured and timer primed!");
+            setAlert("Slot secured!");
         } catch(e) { setAlert("Booking failed."); }
         finally { setLoading(false); }
     };
@@ -458,9 +480,9 @@ function App() {
     const cancelSlot = async (id) => {
         setLoading(true);
         try {
-            await db.collection('bookings_v9').doc(id).delete();
-            setAlert("Booking cancelled.");
-        } catch(e) { setAlert("Action failed."); }
+            await db.collection('bookings_v10').doc(id).delete();
+            setAlert("Slot freed.");
+        } catch(e) { setAlert("Error."); }
         finally { setLoading(false); }
     };
 
@@ -470,11 +492,11 @@ function App() {
                 React.createElement('div', {className:'auth-hero'},
                     React.createElement('div', {className:'auth-logo-icon'}, '🫧'),
                     React.createElement('h1', {style:{fontSize:40, fontWeight:800, letterSpacing:'-1.5px'}}, 'Washslott'),
-                    React.createElement('p', {style:{color:'var(--text-dim)', marginTop:12, fontSize:16}}, 'No fighting, no waiting. Just results.')
+                    React.createElement('p', {style:{color:'var(--text-dim)', marginTop:12, fontSize:16}}, 'Order in the Laundry Room.')
                 ),
                 step === 'login' && [
                     React.createElement('div', {className:'input-group', key:'e'},
-                        React.createElement('span', {className:'input-label'}, 'ACCESS ID'),
+                        React.createElement('span', {className:'input-label'}, 'IDENTITY'),
                         React.createElement('input', {className:'modern-input', type:'email', placeholder:'Email Address', value:email, onChange:e=>setEmail(e.target.value)})
                     ),
                     React.createElement('button', {key:'b', className:'btn-prime', onClick:handleInitialAccess, disabled:loading}, loading ? 'Authenticating...' : 'Get Started')
@@ -482,17 +504,17 @@ function App() {
                 step === 'signup' && [
                     React.createElement('div', {className:'input-group', key:'n'},
                         React.createElement('span', {className:'input-label'}, 'FULL NAME'),
-                        React.createElement('input', {className:'modern-input', placeholder:'Resident Name', value:name, onChange:e=>setName(e.target.value)})
+                        React.createElement('input', {className:'modern-input', placeholder:'John Doe', value:name, onChange:e=>setName(e.target.value)})
                     ),
                     React.createElement('div', {className:'input-group', key:'r'},
-                        React.createElement('span', {className:'input-label'}, 'ROOM #'),
+                        React.createElement('span', {className:'input-label'}, 'ROOM ASSIGNMENT'),
                         React.createElement('input', {className:'modern-input', placeholder:'e.g. 104', value:room, onChange:e=>setRoom(e.target.value)})
                     ),
                     React.createElement('button', {key:'b', className:'btn-prime', onClick:sendVerification, disabled:loading}, 'Register & Secure')
                 ],
                 step === 'verify' && [
                     React.createElement('div', {className:'input-group', key:'o'},
-                        React.createElement('span', {className:'input-label'}, 'VERIFICATION'),
+                        React.createElement('span', {className:'input-label'}, 'VERIFICATION CODE'),
                         React.createElement('input', {className:'modern-input', placeholder:'000000', value:otp, onChange:e=>setOtp(e.target.value)})
                     ),
                     React.createElement('button', {key:'b', className:'btn-prime', onClick:confirmIdentity}, 'Verify Access')
@@ -523,30 +545,30 @@ function App() {
                 ),
                 activeSlot ? [
                     React.createElement('div', {key:'t', className:'timer-display'}, formatTime(timeLeft)),
-                    React.createElement('p', {key:'l', className:'timer-label'}, 'Time Remaining in Slot'),
-                    React.createElement('button', {key:'cl', className:'btn-ghost-danger', onClick:()=>cancelSlot(activeSlot.id)}, [
-                        React.createElement('i', {key:'i', 'data-lucide':'trash-2', size:14}),
-                        'End Session Early'
+                    React.createElement('p', {key:'l', className:'timer-label'}, 'Time Remaining'),
+                    React.createElement('button', {key:'cl', className:'btn-cancel-action', onClick:()=>cancelSlot(activeSlot.id)}, [
+                        React.createElement('i', {key:'i', 'data-lucide':'power', size:14}),
+                        'End Early'
                     ])
                 ] : (nextBooking ? [
                     React.createElement('h2', {key:'t', style:{fontSize:36, fontWeight:800, marginBottom:6}}, nextBooking.time),
                     React.createElement('p', {key:'d', style:{color:'var(--text-dim)', fontSize:15, fontWeight:700}}, 
                         new Date(nextBooking.date).toLocaleDateString(undefined, {weekday:'long', month:'short', day:'numeric'})
                     ),
-                    React.createElement('button', {key:'cl', className:'btn-ghost-danger', onClick:()=>cancelSlot(nextBooking.id)}, [
+                    React.createElement('button', {key:'cl', className:'btn-cancel-action', onClick:()=>cancelSlot(nextBooking.id)}, [
                         React.createElement('i', {key:'i', 'data-lucide':'x-circle', size:14}),
-                        'Cancel This Slot'
+                        'Cancel Slot'
                     ])
                 ] : [
                     React.createElement('h2', {key:'t', style:{fontSize:28, fontWeight:800}}, 'Laundry Ready'),
-                    React.createElement('p', {key:'p', style:{color:'var(--text-dim)', marginTop:8, fontSize:15}}, 'Pick a date and secure your 90min slot.')
+                    React.createElement('p', {key:'p', style:{color:'var(--text-dim)', marginTop:8, fontSize:15}}, 'Pick a date to secure your slot.')
                 ])
             ),
 
             React.createElement('div', {key:'q', className:'queue-section'},
                 React.createElement('div', {className:'grid-header'}, '🔥 LIVE LINEUP'),
                 dayBookingsSorted.length === 0 ? 
-                    React.createElement('p', {style:{fontSize:12, color:'var(--text-dim)', padding:'10px 0'}}, 'Lineup empty for this date.') :
+                    React.createElement('p', {style:{fontSize:12, color:'var(--text-dim)', padding:'10px 0'}}, 'Lineup empty for today.') :
                     React.createElement('div', {className:'queue-list'}, dayBookingsSorted.map(b => 
                         React.createElement('div', {key:b.id, className: `queue-pill ${b.email === user.email ? 'highlight' : ''}`},
                             React.createElement('div', {className:'queue-avatar'}, b.name.charAt(0)),
@@ -559,7 +581,7 @@ function App() {
             ),
 
             React.createElement('div', {key:'d'},
-                React.createElement('div', {className:'grid-header'}, '📅 BOOKING WINDOW'),
+                React.createElement('div', {className:'grid-header'}, '📅 7-DAY WINDOW'),
                 React.createElement('div', {className:'date-strip'}, [0,1,2,3,4,5,6].map(i => {
                     const d = new Date(); d.setDate(d.getDate() + i);
                     const ds = d.toISOString().split('T')[0];
@@ -576,7 +598,7 @@ function App() {
             React.createElement('div', {key:'s'},
                 React.createElement('div', {className:'grid-header'}, [
                     React.createElement('span', {key:'l'}, '⚡ 1.5HR BLOCKS'),
-                    React.createElement('span', {key:'r', style:{fontSize:10, color:'var(--accent)'}}, selDate === todayStr ? 'LIVE NOW' : '')
+                    React.createElement('span', {key:'r', style:{fontSize:10, color:'var(--accent)'}}, selDate === todayStr ? 'LIVE' : '')
                 ]),
                 React.createElement('div', {className:'slots-grid'}, SLOTS.map(t => {
                     const b = dayBookingsSorted.find(bk => bk.time === t);
@@ -602,7 +624,7 @@ function App() {
             myBookings.length === 0 ? 
                 React.createElement('p', {style:{color:'var(--text-dim)', textAlign:'center', marginTop:100}}, 'Lineup history is clean.') :
                 myBookings.sort((a,b) => b.date.localeCompare(a.date)).map(b => 
-                    React.createElement('div', {key:b.id, className:'stat-card'},
+                    React.createElement('div', {key:b.id, className:'stat-card', style:{borderRadius:'22px'}},
                         React.createElement('div', null,
                             React.createElement('div', {className:'slot-time'}, b.time),
                             React.createElement('div', {className:'slot-info'}, new Date(b.date).toLocaleDateString(undefined, {month:'short', day:'numeric', weekday:'short'}))
@@ -614,52 +636,69 @@ function App() {
                 )
         ),
 
-        view === 'profile' && React.createElement('div', {className:'profile-section'},
+        view === 'profile' && React.createElement('div', {className:'profile-container'},
             !isEditing ? [
-                React.createElement('div', {className:'profile-avatar', key:'a'}, user.name?.charAt(0)),
-                React.createElement('h2', {style:{fontSize:28, fontWeight:800}, key:'n'}, user.name),
-                React.createElement('p', {style:{color:'var(--text-dim)', fontSize:15, marginTop:6}, key:'r'}, `Room ${user.room} • ${user.email}`),
-                
-                React.createElement('div', {style:{display:'flex', gap:10, justifyContent:'center', marginTop:15}, key:'ctrl'},
-                    React.createElement('div', {className:'edit-badge', onClick:() => {setName(user.name); setRoom(user.room); setIsEditing(true);}}, 'Edit Profile'),
-                    notifState !== 'granted' && React.createElement('div', {className:'edit-badge', style:{background:'var(--warning)'}, onClick:requestNotifications}, 'Enable Alerts')
+                React.createElement('div', {className:'resident-card', key:'rc'},
+                    React.createElement('div', {className:'profile-avatar-xl'}, user.name?.charAt(0)),
+                    React.createElement('h2', {style:{fontSize:26, fontWeight:800}}, user.name),
+                    React.createElement('p', {style:{color:'var(--text-dim)', fontSize:14, marginTop:4}}, `Room ${user.room} Resident`),
+                    React.createElement('p', {style:{color:'var(--accent)', fontSize:12, fontWeight:800, marginTop:12, letterSpacing:1}}, 'ELITE MEMBER')
                 ),
-
-                React.createElement('div', {style:{marginTop:40}, key:'s'},
-                    React.createElement('div', {className:'stat-card'},
-                        React.createElement('span', {style:{color:'var(--text-dim)'}}, 'Notification Status'),
-                        React.createElement('span', {style:{color: notifState === 'granted' ? 'var(--success)' : 'var(--danger)', fontWeight:800}}, notifState.toUpperCase())
+                
+                React.createElement('div', {className:'action-row', key:'ar'},
+                    React.createElement('div', {className:'action-chip', onClick:() => {setName(user.name); setRoom(user.room); setIsEditing(true);}},
+                        React.createElement('i', {'data-lucide':'edit-3', size:20}),
+                        React.createElement('span', {className:'action-label'}, 'Edit Info')
                     ),
-                    React.createElement('div', {className:'stat-card'},
-                        React.createElement('span', {style:{color:'var(--text-dim)'}}, 'Total Laundry Cycles'),
-                        React.createElement('span', {style:{fontWeight:800}}, myBookings.length)
+                    React.createElement('div', {className:'action-chip', onClick:requestNotifications},
+                        React.createElement('i', {'data-lucide': notifState === 'granted' ? 'bell-ring' : 'bell-off', size:20, color: notifState === 'granted' ? 'var(--success)' : 'var(--accent)'}),
+                        React.createElement('span', {className:'action-label'}, notifState === 'granted' ? 'Alerts On' : 'Fix Alerts')
                     )
                 ),
-                React.createElement('button', {key:'l', className:'logout-action', onClick:()=>{localStorage.clear(); window.location.reload();}}, 'Logout Account')
+
+                React.createElement('div', {className:'stat-grid', key:'sg'},
+                    React.createElement('div', {className:'mini-stat'},
+                        React.createElement('span', {className:'mini-stat-val'}, myBookings.length),
+                        React.createElement('span', {className:'mini-stat-label'}, 'Cycles')
+                    ),
+                    React.createElement('div', {className:'mini-stat'},
+                        React.createElement('span', {className:'mini-stat-val', style:{color: notifState === 'granted' ? 'var(--success)' : 'var(--danger)'}}, notifState === 'granted' ? 'LIVE' : 'OFF'),
+                        React.createElement('span', {className:'mini-stat-label'}, 'Status')
+                    )
+                ),
+
+                React.createElement('div', {className:'logout-panel', key:'lp'},
+                    React.createElement('button', {className:'btn-danger-outline', onClick:()=>{localStorage.clear(); window.location.reload();}}, [
+                        React.createElement('i', {key:'i', 'data-lucide':'log-out', size:18}),
+                        'Sign Out Securely'
+                    ])
+                )
             ] : [
-                React.createElement('h2', {style:{fontSize:24, fontWeight:800, marginBottom:32}, key:'t'}, 'Update Profile'),
+                React.createElement('h2', {style:{fontSize:24, fontWeight:800, marginBottom:32}, key:'t'}, 'Identity Settings'),
                 React.createElement('div', {className:'input-group', key:'in'},
-                    React.createElement('span', {className:'input-label'}, 'NAME'),
+                    React.createElement('span', {className:'input-label'}, 'FULL NAME'),
                     React.createElement('input', {className:'modern-input', value:name, onChange:e=>setName(e.target.value)})
                 ),
                 React.createElement('div', {className:'input-group', key:'ir'},
-                    React.createElement('span', {className:'input-label'}, 'ROOM'),
+                    React.createElement('span', {className:'input-label'}, 'RESIDENT ROOM'),
                     React.createElement('input', {className:'modern-input', value:room, onChange:e=>setRoom(e.target.value)})
                 ),
-                React.createElement('button', {key:'ub', className:'btn-prime', onClick:()=> {
-                    db.collection('users_v5').doc(user.email).update({ name, room });
+                React.createElement('button', {key:'ub', className:'btn-prime', onClick:async ()=> {
+                    setLoading(true);
+                    await db.collection('users_v6').doc(user.email).update({ name, room });
+                    setLoading(false);
                     setIsEditing(false);
-                }}, 'Sync Changes'),
-                React.createElement('button', {key:'cb', className:'logout-action', style:{background:'transparent', color:'var(--text-dim)'}, onClick:()=>setIsEditing(false)}, 'Cancel')
+                }}, loading ? 'Updating...' : 'Save & Sync'),
+                React.createElement('button', {key:'cb', className:'btn-danger-outline', style:{marginTop:12, border:'none'}, onClick:()=>setIsEditing(false)}, 'Discard Changes')
             ]
         ),
 
         React.createElement('div', {className: 'navigation-bar'},
-            React.createElement('div', {className: `nav-link ${view === 'home' ? 'active' : ''}`, onClick: () => setView('home')},
+            React.createElement('div', {className: `nav-link ${view === 'home' ? 'active' : ''}`, onClick: () => {setView('home'); setIsEditing(false);}},
                 React.createElement('i', {'data-lucide': 'grid'}),
                 React.createElement('span', {style:{fontSize:11}}, 'BOOK')
             ),
-            React.createElement('div', {className: `nav-link ${view === 'history' ? 'active' : ''}`, onClick: () => setView('history')},
+            React.createElement('div', {className: `nav-link ${view === 'history' ? 'active' : ''}`, onClick: () => {setView('history'); setIsEditing(false);}},
                 React.createElement('i', {'data-lucide': 'ticket'}),
                 React.createElement('span', {style:{fontSize:11}}, 'HISTORY')
             ),
