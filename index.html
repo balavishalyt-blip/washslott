@@ -5,14 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Washslott — End the Laundry Wars</title>
     
-    <!-- PWA & Mobile Optimization -->
+    <!-- PWA / App Identity -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Washslott">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#0B0E14">
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23A78BFA'/%3E%3Ctext y='70' x='15' font-family='sans-serif' font-size='60' fill='white'%3EW%3C/text%3E%3C/svg%3E">
-    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23A78BFA'/%3E%3Ctext y='70' x='15' font-family='sans-serif' font-size='60' fill='white'%3EW%3C/text%3E%3C/svg%3E">
-    <link rel="manifest" href="data:application/json,{'name':'Washslott','short_name':'Washslott','start_url':'.','display':'standalone','background_color':'%230B0E14','theme_color':'%23A78BFA'}">
 
+    <!-- App Icon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%237C3AED'/%3E%3Ccircle cx='50' cy='58' r='20' stroke='white' stroke-width='6' fill='none'/%3E%3Ccircle cx='50' cy='58' r='8' fill='white'/%3E%3Cpath d='M35 30h30M35 38h15' stroke='white' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%237C3AED'/%3E%3Ccircle cx='50' cy='58' r='20' stroke='white' stroke-width='6' fill='none'/%3E%3Ccircle cx='50' cy='58' r='8' fill='white'/%3E%3Cpath d='M35 30h30M35 38h15' stroke='white' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E">
+    
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -32,6 +35,7 @@
             --glass: rgba(22, 27, 34, 0.8);
             --danger: #FF4D4D;
             --success: #10B981;
+            --warning: #F59E0B;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -54,7 +58,6 @@
             padding-bottom: 110px;
         }
 
-        /* Cinema-Grade Auth Flow */
         .auth-container {
             padding: 40px 32px;
             display: flex;
@@ -65,26 +68,17 @@
         }
         .auth-hero { margin-bottom: 48px; }
         .auth-logo-icon { 
-            width: 72px; height: 72px; 
-            background: var(--accent); 
-            border-radius: 24px; 
+            width: 72px; height: 72px; background: var(--accent); border-radius: 24px; 
             display: flex; align-items: center; justify-content: center; 
-            font-size: 36px; margin-bottom: 24px; 
-            box-shadow: 0 0 40px rgba(167, 139, 250, 0.4); 
+            font-size: 36px; margin-bottom: 24px; box-shadow: 0 0 40px rgba(167, 139, 250, 0.4); 
             transform: rotate(-10deg);
         }
         
         .input-group { margin-bottom: 24px; position: relative; }
         .modern-input {
-            width: 100%;
-            background: #0D1117;
-            border: 1px solid var(--border);
-            padding: 22px;
-            border-radius: 18px;
-            color: white;
-            font-size: 16px;
-            outline: none;
-            transition: 0.3s;
+            width: 100%; background: #0D1117; border: 1px solid var(--border);
+            padding: 22px; border-radius: 18px; color: white; font-size: 16px;
+            outline: none; transition: 0.3s;
         }
         .modern-input:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(167, 139, 250, 0.1); }
         .input-label { 
@@ -94,23 +88,21 @@
             letter-spacing: 0.8px; z-index: 10;
         }
 
-        /* Dashboard Components */
         .header { padding: 24px 20px; display: flex; justify-content: space-between; align-items: center; }
         .brand-text { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 22px; letter-spacing: -1px; text-transform: uppercase; }
         
         .hero-banner {
             margin: 0 20px 24px;
             background: linear-gradient(165deg, #1F2937 0%, #0B0E14 100%);
-            border-radius: 36px;
-            padding: 32px;
-            border: 1px solid var(--border);
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            border-radius: 36px; padding: 32px; border: 1px solid var(--border);
+            position: relative; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+        .hero-banner.active-session {
+            background: linear-gradient(165deg, #2D1B69 0%, #0B0E14 100%);
+            border-color: var(--accent);
         }
         .hero-banner::after { 
-            content: ''; position: absolute; 
-            top: -50%; right: -20%; width: 220px; height: 220px; 
+            content: ''; position: absolute; top: -50%; right: -20%; width: 220px; height: 220px; 
             background: var(--accent); filter: blur(100px); opacity: 0.15; 
         }
 
@@ -119,24 +111,19 @@
             background: rgba(167, 139, 250, 0.12); color: var(--accent); 
             padding: 8px 16px; border-radius: 50px; 
             font-size: 10px; font-weight: 800; margin-bottom: 20px; 
-            border: 1px solid rgba(167, 139, 250, 0.2);
-            letter-spacing: 0.5px;
+            border: 1px solid rgba(167, 139, 250, 0.2); letter-spacing: 0.5px;
         }
+        .status-tag.live { background: rgba(16, 185, 129, 0.12); color: var(--success); border-color: rgba(16, 185, 129, 0.2); }
 
-        /* Date Strip */
+        .timer-display { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 48px; letter-spacing: -2px; color: var(--text); }
+        .timer-label { font-size: 12px; font-weight: 800; color: var(--text-dim); text-transform: uppercase; margin-top: -5px; }
+
         .date-strip { display: flex; gap: 14px; overflow-x: auto; padding: 0 20px 28px; scrollbar-width: none; }
         .date-strip::-webkit-scrollbar { display: none; }
         .date-card {
-            flex: 0 0 72px;
-            height: 104px;
-            background: var(--card);
-            border-radius: 26px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            border: 1px solid var(--border);
-            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            flex: 0 0 72px; height: 104px; background: var(--card); border-radius: 26px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            border: 1px solid var(--border); transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             cursor: pointer;
         }
         .date-card.active { 
@@ -146,10 +133,8 @@
         }
         .date-card.active span { color: var(--surface) !important; }
 
-        /* Queue Section */
         .queue-section { padding: 0 20px 24px; }
         .queue-list { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: none; }
-        .queue-list::-webkit-scrollbar { display: none; }
         .queue-pill {
             flex: 0 0 auto; background: var(--card); border: 1px solid var(--border);
             padding: 12px 18px; border-radius: 20px; display: flex; align-items: center; gap: 10px;
@@ -157,17 +142,11 @@
         .queue-pill.highlight { border-color: var(--accent); background: rgba(167, 139, 250, 0.05); }
         .queue-avatar { width: 24px; height: 24px; background: var(--accent-dark); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; }
 
-        /* Slots Grid */
         .grid-header { padding: 0 22px 18px; font-size: 13px; font-weight: 800; color: var(--text-dim); display: flex; justify-content: space-between; align-items: center; text-transform: uppercase; letter-spacing: 1px; }
         .slots-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; padding: 0 20px; }
         .slot-card {
-            background: var(--card);
-            border-radius: 24px;
-            padding: 24px 20px;
-            border: 1px solid var(--border);
-            transition: 0.3s ease;
-            position: relative;
-            cursor: pointer;
+            background: var(--card); border-radius: 24px; padding: 24px 20px; border: 1px solid var(--border);
+            transition: 0.3s ease; position: relative; cursor: pointer;
         }
         .slot-card.booked, .slot-card.passed { opacity: 0.3; cursor: default; filter: grayscale(1); }
         .slot-card.passed { border-style: solid; border-color: #222; }
@@ -180,8 +159,7 @@
         .slot-time { font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 700; margin-bottom: 8px; }
         .slot-info { 
             font-size: 10px; font-weight: 800; color: var(--text-dim); 
-            text-transform: uppercase; white-space: nowrap; 
-            overflow: hidden; text-overflow: ellipsis; 
+            text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
             max-width: 100%;
         }
 
@@ -192,61 +170,24 @@
             border-radius: 8px; cursor: pointer;
         }
 
-        /* Navigation */
         .navigation-bar {
-            position: fixed;
-            bottom: 0; left: 50%;
-            transform: translateX(-50%);
-            width: 100%; max-width: 440px;
-            height: 95px; background: var(--glass);
-            backdrop-filter: blur(30px);
-            border-top: 1px solid var(--border);
-            display: flex; justify-content: space-around;
-            align-items: center; z-index: 1000;
-            padding-bottom: 10px;
+            position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+            width: 100%; max-width: 440px; height: 95px; background: var(--glass);
+            backdrop-filter: blur(30px); border-top: 1px solid var(--border);
+            display: flex; justify-content: space-around; align-items: center; 
+            z-index: 1000; padding-bottom: 10px;
         }
         .nav-link { 
             display: flex; flex-direction: column; align-items: center; gap: 8px; 
-            color: var(--text-dim); cursor: pointer; transition: 0.3s; 
-            width: 33%; font-weight: 700;
+            color: var(--text-dim); cursor: pointer; transition: 0.3s; width: 33%; font-weight: 700;
         }
         .nav-link.active { color: var(--accent); }
 
-        /* Profile & Buttons */
-        .profile-section { padding: 40px 24px; text-align: center; }
-        .profile-avatar { 
-            width: 110px; height: 110px; 
-            background: linear-gradient(135deg, var(--accent), var(--accent-dark)); 
-            border-radius: 44px; margin: 0 auto 24px; 
-            display: flex; align-items: center; justify-content: center; 
-            font-size: 44px; font-weight: 800; color: white; 
-            box-shadow: 0 20px 40px rgba(124, 58, 237, 0.3);
-            text-transform: uppercase;
-        }
-        .stat-card {
-            background: var(--card); border-radius: 28px; 
-            padding: 24px; border: 1px solid var(--border);
-            margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;
-        }
         .btn-prime { 
             background: var(--accent); color: var(--surface); border: none; 
             padding: 20px; border-radius: 18px; font-weight: 800; 
             font-size: 16px; width: 100%; cursor: pointer; transition: 0.3s;
         }
-        .logout-action { 
-            background: var(--danger); color: white; border: none; 
-            padding: 18px; border-radius: 18px; font-weight: 800; 
-            width: 100%; margin-top: 48px; cursor: pointer;
-        }
-
-        .edit-badge {
-            background: var(--accent); color: var(--surface);
-            padding: 4px 12px; border-radius: 50px; font-size: 10px;
-            font-weight: 800; margin-top: 8px; cursor: pointer;
-            display: inline-block;
-        }
-
-        /* Modal */
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.92); backdrop-filter: blur(12px); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 24px; }
         .modal-content { 
             background: var(--card); border-radius: 36px; padding: 40px 32px; 
@@ -260,7 +201,6 @@
 <script>
 const { useState, useEffect, useMemo } = React;
 
-// --- CONFIGURATION ---
 const CONFIG = {
   firebase: {
     apiKey: "AIzaSyAU9Ri-34THt2AdTHYuUN2rP3YbU2ii1ZU",
@@ -281,7 +221,6 @@ firebase.initializeApp(CONFIG.firebase);
 const db = firebase.firestore();
 emailjs.init(CONFIG.emailjs.public);
 
-// 1.5-Hour Cycle
 const SLOTS = [
     "00:00 AM", "01:30 AM", "03:00 AM", "04:30 AM", 
     "06:00 AM", "07:30 AM", "09:00 AM", "10:30 AM", 
@@ -290,14 +229,15 @@ const SLOTS = [
 ];
 
 function App() {
-    // Current Production Pipeline: v8 Session & Data
-    const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('ws_elite_v8_session')));
+    const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('ws_elite_v9_session')));
     const [step, setStep] = useState(user ? 'app' : 'login'); 
     const [view, setView] = useState('home');
     const [bookings, setBookings] = useState([]);
     const [selDate, setSelDate] = useState(new Date().toISOString().split('T')[0]);
-    
-    // States
+    const [timeLeft, setTimeLeft] = useState(null);
+    const [activeSlot, setActiveSlot] = useState(null);
+
+    // Auth States
     const [email, setEmail] = useState('');
     const [name, setName] = useState('');
     const [room, setRoom] = useState('');
@@ -307,39 +247,110 @@ function App() {
     const [alert, setAlert] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
 
-    // Sync Collections (v8 Bookings, v4 Users)
+    // Notification Permission Request
     useEffect(() => {
-        const unsubBookings = db.collection('bookings_v8').onSnapshot(s => {
+        if ("Notification" in window && Notification.permission === "default") {
+            Notification.requestPermission();
+        }
+    }, []);
+
+    // Sync Fresh Collections (v9 Bookings, v5 Users)
+    useEffect(() => {
+        const unsubBookings = db.collection('bookings_v9').onSnapshot(s => {
             setBookings(s.docs.map(d => ({ id: d.id, ...d.data() })));
         });
 
         let unsubUser = () => {};
         if (user?.email) {
-            unsubUser = db.collection('users_v4').doc(user.email).onSnapshot(doc => {
+            unsubUser = db.collection('users_v5').doc(user.email).onSnapshot(doc => {
                 if (doc.exists) {
                     const data = doc.data();
                     const updatedUser = { ...user, ...data };
                     setUser(updatedUser);
-                    localStorage.setItem('ws_elite_v8_session', JSON.stringify(updatedUser));
+                    localStorage.setItem('ws_elite_v9_session', JSON.stringify(updatedUser));
                 }
             });
         }
         return () => { unsubBookings(); unsubUser(); };
     }, [user?.email]);
 
-    // Helpers
-    const isPassed = (dateStr, timeStr) => {
+    // TIMER & NOTIFICATION LOGIC
+    useEffect(() => {
+        const timer = setInterval(() => {
+            if (!user) return;
+            const now = new Date();
+            const todayStr = now.toISOString().split('T')[0];
+            
+            // Find current active slot for user
+            const current = bookings.find(b => {
+                if (b.email !== user.email || b.date !== todayStr) return false;
+                const [start, end] = getSlotRange(b.time);
+                return now >= start && now < end;
+            });
+
+            if (current) {
+                const [_, end] = getSlotRange(current.time);
+                const diff = Math.floor((end - now) / 1000);
+                setTimeLeft(diff);
+                setActiveSlot(current);
+
+                // End Warning (10 mins left)
+                if (diff === 600) {
+                    sendNotification("10 Mins Left!", "Your slot is ending soon. Please clear the machine.");
+                    setAlert("War Ending Soon! 10 minutes remains in your slot.");
+                }
+            } else {
+                setTimeLeft(null);
+                setActiveSlot(null);
+            }
+
+            // Check for upcoming slot start notification (10 mins before)
+            bookings.forEach(b => {
+                if (b.email === user.email && b.date === todayStr) {
+                    const [start] = getSlotRange(b.time);
+                    const diffToStart = Math.floor((start - now) / 1000);
+                    if (diffToStart === 600) {
+                        sendNotification("Starting Soon!", "Your laundry slot starts in 10 minutes.");
+                        setAlert("Prepare for Battle! Your slot starts in 10 minutes.");
+                    }
+                }
+            });
+
+        }, 1000);
+        return () => clearInterval(timer);
+    }, [bookings, user]);
+
+    const getSlotRange = (timeStr) => {
         const now = new Date();
-        const todayStr = now.toISOString().split('T')[0];
-        if (dateStr < todayStr) return true;
-        if (dateStr > todayStr) return false;
         const [time, period] = timeStr.split(' ');
         let [hours, minutes] = time.split(':').map(Number);
         if (period === 'PM' && hours !== 12) hours += 12;
         if (period === 'AM' && hours === 12) hours = 0;
-        const slotDate = new Date(now);
-        slotDate.setHours(hours, minutes, 0, 0);
-        return now >= slotDate;
+        const start = new Date(now); start.setHours(hours, minutes, 0, 0);
+        const end = new Date(start.getTime() + 90 * 60000);
+        return [start, end];
+    };
+
+    const sendNotification = (title, body) => {
+        if ("Notification" in window && Notification.permission === "granted") {
+            new Notification(title, { body, icon: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%237C3AED'/%3E%3C/svg%3E" });
+        }
+    };
+
+    const formatTime = (seconds) => {
+        const h = Math.floor(seconds / 3600);
+        const m = Math.floor((seconds % 3600) / 60);
+        const s = seconds % 60;
+        return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    };
+
+    // UI Helpers
+    const isPassed = (dateStr, timeStr) => {
+        const now = new Date();
+        if (dateStr < now.toISOString().split('T')[0]) return true;
+        if (dateStr > now.toISOString().split('T')[0]) return false;
+        const [start] = getSlotRange(timeStr);
+        return now >= start;
     };
 
     const dayBookingsSorted = useMemo(() => {
@@ -355,18 +366,18 @@ function App() {
             .sort((a,b) => (a.date + a.time).localeCompare(b.date + b.time))[0];
     }, [myBookings, todayStr]);
 
-    // Actions
+    // Database Actions
     const handleInitialAccess = async () => {
-        if(!email) return setAlert("Email is required");
+        if(!email) return setAlert("Access ID required");
         setLoading(true);
         try {
-            const userRef = await db.collection('users_v4').doc(email).get();
+            const userRef = await db.collection('users_v5').doc(email).get();
             if(userRef.exists) {
                 const data = userRef.data();
                 setRoom(data.room); setName(data.name || 'Resident');
                 sendVerification();
             } else setStep('signup');
-        } catch(e) { setAlert("Connectivity error"); }
+        } catch(e) { setAlert("Network error"); }
         finally { setLoading(false); }
     };
 
@@ -377,28 +388,18 @@ function App() {
         try {
             await emailjs.send(CONFIG.emailjs.service, CONFIG.emailjs.template, { to_email: email, otp: code });
             setStep('verify');
-        } catch(e) { setAlert("Demo Verification: Code is " + code); setStep('verify'); }
+        } catch(e) { setAlert("Demo Verification: " + code); setStep('verify'); }
         finally { setLoading(false); }
     };
 
     const confirmIdentity = async () => {
         if(otp === genOtp || otp === '000000') {
             const profile = { email, room, name };
-            await db.collection('users_v4').doc(email).set(profile);
+            await db.collection('users_v5').doc(email).set(profile);
             setUser(profile);
-            localStorage.setItem('ws_elite_v8_session', JSON.stringify(profile));
+            localStorage.setItem('ws_elite_v9_session', JSON.stringify(profile));
             setStep('app');
         } else setAlert("Invalid code");
-    };
-
-    const updateProfile = async () => {
-        if(!name || !room) return setAlert("All fields required");
-        setLoading(true);
-        try {
-            await db.collection('users_v4').doc(user.email).update({ name, room });
-            setIsEditing(false); setAlert("Profile updated successfully.");
-        } catch(e) { setAlert("Update failed."); }
-        finally { setLoading(false); }
     };
 
     const secureSlot = async (time) => {
@@ -406,15 +407,15 @@ function App() {
         if(myBookings.some(b => b.date === selDate)) return setAlert("Limit: 1 slot/day.");
         const startOfWeek = new Date(); startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
         const weekCount = myBookings.filter(b => b.date >= startOfWeek.toISOString().split('T')[0]).length;
-        if(weekCount >= 3) return setAlert("Weekly limit (3) reached.");
+        if(weekCount >= 3) return setAlert("Weekly limit reached.");
 
         setLoading(true);
         try {
-            await db.collection('bookings_v8').add({
+            await db.collection('bookings_v9').add({
                 email: user.email, name: user.name, room: user.room,
                 date: selDate, time, timestamp: Date.now()
             });
-            setAlert("Slot secured! It's in the lineup.");
+            setAlert("Slot secured and timer primed!");
         } catch(e) { setAlert("Booking failed."); }
         finally { setLoading(false); }
     };
@@ -422,27 +423,27 @@ function App() {
     const cancelSlot = async (id) => {
         setLoading(true);
         try {
-            await db.collection('bookings_v8').doc(id).delete();
-            setAlert("Booking cancelled successfully.");
-        } catch(e) { setAlert("Cancellation failed."); }
+            await db.collection('bookings_v9').doc(id).delete();
+            setAlert("Booking cancelled.");
+        } catch(e) { setAlert("Action failed."); }
         finally { setLoading(false); }
     };
 
-    // UI: Login
+    // UI: Main App Screens
     if (step !== 'app') {
         return React.createElement('div', {className:'app-container'},
             React.createElement('div', {className:'auth-container'},
                 React.createElement('div', {className:'auth-hero'},
                     React.createElement('div', {className:'auth-logo-icon'}, '🫧'),
                     React.createElement('h1', {style:{fontSize:40, fontWeight:800, letterSpacing:'-1.5px'}}, 'Washslott'),
-                    React.createElement('p', {style:{color:'var(--text-dim)', marginTop:12, fontSize:16}}, 'No fighting, no waiting. End the laundry wars.')
+                    React.createElement('p', {style:{color:'var(--text-dim)', marginTop:12, fontSize:16}}, 'No fighting, no waiting. Just results.')
                 ),
                 step === 'login' && [
                     React.createElement('div', {className:'input-group', key:'e'},
                         React.createElement('span', {className:'input-label'}, 'ACCESS ID'),
-                        React.createElement('input', {className:'modern-input', type:'email', placeholder:'Enter Email Address', value:email, onChange:e=>setEmail(e.target.value)})
+                        React.createElement('input', {className:'modern-input', type:'email', placeholder:'Email Address', value:email, onChange:e=>setEmail(e.target.value)})
                     ),
-                    React.createElement('button', {key:'b', className:'btn-prime', onClick:handleInitialAccess, disabled:loading}, loading ? 'Syncing...' : 'Enter Dashboard')
+                    React.createElement('button', {key:'b', className:'btn-prime', onClick:handleInitialAccess, disabled:loading}, loading ? 'Authenticating...' : 'Get Started')
                 ],
                 step === 'signup' && [
                     React.createElement('div', {className:'input-group', key:'n'},
@@ -457,52 +458,57 @@ function App() {
                 ],
                 step === 'verify' && [
                     React.createElement('div', {className:'input-group', key:'o'},
-                        React.createElement('span', {className:'input-label'}, 'SECURITY CODE'),
+                        React.createElement('span', {className:'input-label'}, 'VERIFICATION'),
                         React.createElement('input', {className:'modern-input', placeholder:'000000', value:otp, onChange:e=>setOtp(e.target.value)})
                     ),
-                    React.createElement('button', {key:'b', className:'btn-prime', onClick:confirmIdentity}, 'Verify')
+                    React.createElement('button', {key:'b', className:'btn-prime', onClick:confirmIdentity}, 'Verify Access')
                 ]
             ),
             alert && React.createElement('div', {className:'modal-overlay', onClick:()=>setAlert(null)},
                 React.createElement('div', {className:'modal-content'},
                     React.createElement('p', {style:{fontWeight:700, fontSize:18, lineHeight:1.5}}, alert),
-                    React.createElement('button', {className:'btn-prime', style:{marginTop:20}}, 'Dismiss')
+                    React.createElement('button', {className:'btn-prime', style:{marginTop:24}}, 'Confirm')
                 )
             )
         );
     }
 
-    // UI: Main
     return React.createElement('div', {className:'app-container'},
         React.createElement('div', {className:'header'},
             React.createElement('h2', {className:'brand-text'}, 'WASHSLOTT'),
             React.createElement('div', {style:{width:40, height:40, background:'var(--card)', borderRadius:'14px', display:'flex', alignItems:'center', justifyContent:'center'}}, 
-                React.createElement('i', {'data-lucide':'bell', size:20, color:nextBooking ? 'var(--accent)' : 'var(--text-dim)'})
+                React.createElement('i', {'data-lucide':'bell', size:20, color:nextBooking || activeSlot ? 'var(--accent)' : 'var(--text-dim)'})
             )
         ),
 
         view === 'home' && [
-            React.createElement('div', {key:'h', className:'hero-banner'},
-                React.createElement('div', {className:'status-tag'}, 
-                    React.createElement('i', {'data-lucide': nextBooking ? 'clock' : 'layers', size:12}),
-                    nextBooking ? 'PERSONAL NEXT' : `${dayBookingsSorted.length} IN LINE TODAY`
+            // Status Hero with Live Timer
+            React.createElement('div', {key:'h', className: `hero-banner ${activeSlot ? 'active-session' : ''}`},
+                React.createElement('div', {className: `status-tag ${activeSlot ? 'live' : ''}`}, 
+                    React.createElement('i', {'data-lucide': activeSlot ? 'zap' : (nextBooking ? 'clock' : 'layers'), size:12}),
+                    activeSlot ? 'SESSION LIVE' : (nextBooking ? 'UPCOMING' : `${dayBookingsSorted.length} IN QUEUE`)
                 ),
-                nextBooking ? [
+                activeSlot ? [
+                    React.createElement('div', {key:'t', className:'timer-display'}, formatTime(timeLeft)),
+                    React.createElement('p', {key:'l', className:'timer-label'}, 'Time Remaining in Slot'),
+                    React.createElement('div', {key:'cl', className:'edit-badge', style:{background:'rgba(255,255,255,0.1)', color:'white', marginTop:16}, onClick:()=>cancelSlot(activeSlot.id)}, 'End Session Early')
+                ] : (nextBooking ? [
                     React.createElement('h2', {key:'t', style:{fontSize:36, fontWeight:800, marginBottom:6}}, nextBooking.time),
                     React.createElement('p', {key:'d', style:{color:'var(--text-dim)', fontSize:15, fontWeight:700}}, 
                         new Date(nextBooking.date).toLocaleDateString(undefined, {weekday:'long', month:'short', day:'numeric'})
                     ),
                     React.createElement('div', {key:'cl', className:'edit-badge', style:{background:'var(--danger)', color:'white', marginTop:16}, onClick:()=>cancelSlot(nextBooking.id)}, 'Cancel This Slot')
                 ] : [
-                    React.createElement('h2', {key:'t', style:{fontSize:28, fontWeight:800}}, 'Join the Lineup'),
-                    React.createElement('p', {key:'p', style:{color:'var(--text-dim)', marginTop:8, fontSize:15}}, 'No more fighting for slots. Just effortless laundry.')
-                ]
+                    React.createElement('h2', {key:'t', style:{fontSize:28, fontWeight:800}}, 'Laundry Ready'),
+                    React.createElement('p', {key:'p', style:{color:'var(--text-dim)', marginTop:8, fontSize:15}}, 'Pick a date and secure your 90min slot.')
+                ])
             ),
 
+            // Live Lineup
             React.createElement('div', {key:'q', className:'queue-section'},
-                React.createElement('div', {className:'grid-header'}, '🔥 TODAY\'S LINEUP'),
+                React.createElement('div', {className:'grid-header'}, '🔥 LIVE LINEUP'),
                 dayBookingsSorted.length === 0 ? 
-                    React.createElement('p', {style:{fontSize:12, color:'var(--text-dim)', padding:'10px 0'}}, 'No active lineup. Grab the first slot!') :
+                    React.createElement('p', {style:{fontSize:12, color:'var(--text-dim)', padding:'10px 0'}}, 'Lineup empty for this date.') :
                     React.createElement('div', {className:'queue-list'}, dayBookingsSorted.map(b => 
                         React.createElement('div', {key:b.id, className: `queue-pill ${b.email === user.email ? 'highlight' : ''}`},
                             React.createElement('div', {className:'queue-avatar'}, b.name.charAt(0)),
@@ -514,8 +520,9 @@ function App() {
                     ))
             ),
 
+            // 7-Day Scroller
             React.createElement('div', {key:'d'},
-                React.createElement('div', {className:'grid-header'}, '📅 7-DAY WINDOW'),
+                React.createElement('div', {className:'grid-header'}, '📅 BOOKING WINDOW'),
                 React.createElement('div', {className:'date-strip'}, [0,1,2,3,4,5,6].map(i => {
                     const d = new Date(); d.setDate(d.getDate() + i);
                     const ds = d.toISOString().split('T')[0];
@@ -529,10 +536,11 @@ function App() {
                 }))
             ),
 
+            // Slots Grid
             React.createElement('div', {key:'s'},
                 React.createElement('div', {className:'grid-header'}, [
                     React.createElement('span', {key:'l'}, '⚡ 1.5HR BLOCKS'),
-                    React.createElement('span', {key:'r', style:{fontSize:10, color:'var(--accent)'}}, selDate === todayStr ? 'LIVE' : '')
+                    React.createElement('span', {key:'r', style:{fontSize:10, color:'var(--accent)'}}, selDate === todayStr ? 'LIVE NOW' : '')
                 ]),
                 React.createElement('div', {className:'slots-grid'}, SLOTS.map(t => {
                     const b = dayBookingsSorted.find(bk => bk.time === t);
@@ -554,9 +562,9 @@ function App() {
         ],
 
         view === 'history' && React.createElement('div', {style:{padding:22}},
-            React.createElement('h2', {style:{fontSize:26, fontWeight:800, marginBottom:28}}, 'Booking History'),
+            React.createElement('h2', {style:{fontSize:26, fontWeight:800, marginBottom:28}}, 'History'),
             myBookings.length === 0 ? 
-                React.createElement('p', {style:{color:'var(--text-dim)', textAlign:'center', marginTop:100}}, 'No bookings found.') :
+                React.createElement('p', {style:{color:'var(--text-dim)', textAlign:'center', marginTop:100}}, 'Lineup history is clean.') :
                 myBookings.sort((a,b) => b.date.localeCompare(a.date)).map(b => 
                     React.createElement('div', {key:b.id, className:'stat-card'},
                         React.createElement('div', null,
@@ -587,17 +595,20 @@ function App() {
                     React.createElement('span', {className:'input-label'}, 'ROOM'),
                     React.createElement('input', {className:'modern-input', value:room, onChange:e=>setRoom(e.target.value)})
                 ),
-                React.createElement('button', {key:'ub', className:'btn-prime', onClick:updateProfile, disabled:loading}, loading ? 'Saving...' : 'Sync Changes'),
+                React.createElement('button', {key:'ub', className:'btn-prime', onClick:()=> {
+                    db.collection('users_v5').doc(user.email).update({ name, room });
+                    setIsEditing(false);
+                }}, 'Sync Changes'),
                 React.createElement('button', {key:'cb', className:'logout-action', style:{background:'transparent', color:'var(--text-dim)'}, onClick:()=>setIsEditing(false)}, 'Cancel')
             ]
         ),
 
         React.createElement('div', {className: 'navigation-bar'},
-            React.createElement('div', {className: `nav-link ${view === 'home' ? 'active' : ''}`, onClick: () => {setView('home'); setIsEditing(false);}},
+            React.createElement('div', {className: `nav-link ${view === 'home' ? 'active' : ''}`, onClick: () => setView('home')},
                 React.createElement('i', {'data-lucide': 'grid'}),
                 React.createElement('span', {style:{fontSize:11}}, 'BOOK')
             ),
-            React.createElement('div', {className: `nav-link ${view === 'history' ? 'active' : ''}`, onClick: () => {setView('history'); setIsEditing(false);}},
+            React.createElement('div', {className: `nav-link ${view === 'history' ? 'active' : ''}`, onClick: () => setView('history')},
                 React.createElement('i', {'data-lucide': 'ticket'}),
                 React.createElement('span', {style:{fontSize:11}}, 'HISTORY')
             ),
