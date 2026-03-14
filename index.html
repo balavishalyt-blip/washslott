@@ -22,6 +22,7 @@
             --border: #30363D;
             --glass: rgba(22, 27, 34, 0.8);
             --danger: #FF4D4D;
+            --success: #10B981;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -136,7 +137,7 @@
         }
         .date-card.active span { color: var(--surface) !important; }
 
-        /* Queue / Lineup Section */
+        /* Queue Section */
         .queue-section { padding: 0 20px 24px; }
         .queue-list { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: none; }
         .queue-list::-webkit-scrollbar { display: none; }
@@ -175,22 +176,24 @@
             max-width: 100%;
         }
 
-        /* Bottom Tab Navigation */
+        .cancel-label {
+            position: absolute; top: 12px; right: 12px;
+            color: var(--danger); font-size: 9px; font-weight: 800;
+            padding: 4px 8px; background: rgba(255, 77, 77, 0.1);
+            border-radius: 8px; cursor: pointer;
+        }
+
+        /* Navigation */
         .navigation-bar {
             position: fixed;
-            bottom: 0;
-            left: 50%;
+            bottom: 0; left: 50%;
             transform: translateX(-50%);
-            width: 100%;
-            max-width: 440px;
-            height: 95px;
-            background: var(--glass);
+            width: 100%; max-width: 440px;
+            height: 95px; background: var(--glass);
             backdrop-filter: blur(30px);
             border-top: 1px solid var(--border);
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            z-index: 1000;
+            display: flex; justify-content: space-around;
+            align-items: center; z-index: 1000;
             padding-bottom: 10px;
         }
         .nav-link { 
@@ -200,7 +203,7 @@
         }
         .nav-link.active { color: var(--accent); }
 
-        /* Profile View */
+        /* Profile & Buttons */
         .profile-section { padding: 40px 24px; text-align: center; }
         .profile-avatar { 
             width: 110px; height: 110px; 
@@ -216,26 +219,15 @@
             padding: 24px; border: 1px solid var(--border);
             margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;
         }
+        .btn-prime { 
+            background: var(--accent); color: var(--surface); border: none; 
+            padding: 20px; border-radius: 18px; font-weight: 800; 
+            font-size: 16px; width: 100%; cursor: pointer; transition: 0.3s;
+        }
         .logout-action { 
             background: var(--danger); color: white; border: none; 
             padding: 18px; border-radius: 18px; font-weight: 800; 
             width: 100%; margin-top: 48px; cursor: pointer;
-            transition: 0.3s;
-        }
-
-        /* Core Buttons */
-        .btn-prime { 
-            background: var(--accent); color: var(--surface); border: none; 
-            padding: 20px; border-radius: 18px; font-weight: 800; 
-            font-size: 16px; width: 100%; cursor: pointer; 
-            transition: 0.3s;
-        }
-
-        /* Overlay */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.92); backdrop-filter: blur(12px); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 24px; }
-        .modal-content { 
-            background: var(--card); border-radius: 36px; padding: 40px 32px; 
-            width: 100%; border: 1px solid var(--border); text-align: center;
         }
 
         .edit-badge {
@@ -243,6 +235,13 @@
             padding: 4px 12px; border-radius: 50px; font-size: 10px;
             font-weight: 800; margin-top: 8px; cursor: pointer;
             display: inline-block;
+        }
+
+        /* Modal */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.92); backdrop-filter: blur(12px); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 24px; }
+        .modal-content { 
+            background: var(--card); border-radius: 36px; padding: 40px 32px; 
+            width: 100%; border: 1px solid var(--border); text-align: center;
         }
     </style>
 </head>
@@ -269,12 +268,11 @@ const CONFIG = {
   }
 };
 
-// Start Firebase
 firebase.initializeApp(CONFIG.firebase);
 const db = firebase.firestore();
 emailjs.init(CONFIG.emailjs.public);
 
-// 1.5-Hour Operations (16 slots per day)
+// 1.5-Hour Cycle
 const SLOTS = [
     "00:00 AM", "01:30 AM", "03:00 AM", "04:30 AM", 
     "06:00 AM", "07:30 AM", "09:00 AM", "10:30 AM", 
@@ -283,14 +281,14 @@ const SLOTS = [
 ];
 
 function App() {
-    // Session key updated to v7 for fresh data reset
-    const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('ws_elite_v7_session')));
+    // FRESH START: v8 Session & Data
+    const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('ws_elite_v8_session')));
     const [step, setStep] = useState(user ? 'app' : 'login'); 
     const [view, setView] = useState('home');
     const [bookings, setBookings] = useState([]);
     const [selDate, setSelDate] = useState(new Date().toISOString().split('T')[0]);
     
-    // Auth & Edit States
+    // States
     const [email, setEmail] = useState('');
     const [name, setName] = useState('');
     const [room, setRoom] = useState('');
@@ -300,54 +298,43 @@ function App() {
     const [alert, setAlert] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
 
-    // Sync Data (v7 collections for fresh start)
+    // Sync Fresh Collections (v8 Bookings, v4 Users)
     useEffect(() => {
-        const unsubBookings = db.collection('bookings_v7').onSnapshot(s => {
+        const unsubBookings = db.collection('bookings_v8').onSnapshot(s => {
             setBookings(s.docs.map(d => ({ id: d.id, ...d.data() })));
         });
 
         let unsubUser = () => {};
         if (user?.email) {
-            unsubUser = db.collection('users_v3').doc(user.email).onSnapshot(doc => {
+            unsubUser = db.collection('users_v4').doc(user.email).onSnapshot(doc => {
                 if (doc.exists) {
                     const data = doc.data();
                     const updatedUser = { ...user, ...data };
                     setUser(updatedUser);
-                    localStorage.setItem('ws_elite_v7_session', JSON.stringify(updatedUser));
+                    localStorage.setItem('ws_elite_v8_session', JSON.stringify(updatedUser));
                 }
             });
         }
-
-        return () => {
-            unsubBookings();
-            unsubUser();
-        };
+        return () => { unsubBookings(); unsubUser(); };
     }, [user?.email]);
 
-    // Time Check Helper
+    // Helpers
     const isPassed = (dateStr, timeStr) => {
         const now = new Date();
         const todayStr = now.toISOString().split('T')[0];
         if (dateStr < todayStr) return true;
         if (dateStr > todayStr) return false;
-
         const [time, period] = timeStr.split(' ');
         let [hours, minutes] = time.split(':').map(Number);
-        
         if (period === 'PM' && hours !== 12) hours += 12;
         if (period === 'AM' && hours === 12) hours = 0;
-        
         const slotDate = new Date(now);
         slotDate.setHours(hours, minutes, 0, 0);
-        
         return now >= slotDate;
     };
 
-    // Derived Logic
     const dayBookingsSorted = useMemo(() => {
-        return bookings
-            .filter(b => b.date === selDate)
-            .sort((a,b) => a.time.localeCompare(b.time));
+        return bookings.filter(b => b.date === selDate).sort((a,b) => a.time.localeCompare(b.time));
     }, [bookings, selDate]);
 
     const myBookings = useMemo(() => bookings.filter(b => b.email === user?.email), [bookings, user]);
@@ -359,20 +346,18 @@ function App() {
             .sort((a,b) => (a.date + a.time).localeCompare(b.date + b.time))[0];
     }, [myBookings, todayStr]);
 
+    // Actions
     const handleInitialAccess = async () => {
-        if(!email) return setAlert("Email is required for security");
+        if(!email) return setAlert("Email is required");
         setLoading(true);
         try {
-            const userRef = await db.collection('users_v3').doc(email).get();
+            const userRef = await db.collection('users_v4').doc(email).get();
             if(userRef.exists) {
                 const data = userRef.data();
-                setRoom(data.room);
-                setName(data.name || 'Resident');
+                setRoom(data.room); setName(data.name || 'Resident');
                 sendVerification();
-            } else {
-                setStep('signup');
-            }
-        } catch(e) { setAlert("Database connection failed"); }
+            } else setStep('signup');
+        } catch(e) { setAlert("Connectivity error"); }
         finally { setLoading(false); }
     };
 
@@ -383,137 +368,132 @@ function App() {
         try {
             await emailjs.send(CONFIG.emailjs.service, CONFIG.emailjs.template, { to_email: email, otp: code });
             setStep('verify');
-        } catch(e) {
-            setAlert("Demo Mode: OTP is " + code);
-            setStep('verify');
-        } finally { setLoading(false); }
+        } catch(e) { setAlert("Demo Mode Enabled. OTP: " + code); setStep('verify'); }
+        finally { setLoading(false); }
     };
 
     const confirmIdentity = async () => {
         if(otp === genOtp || otp === '000000') {
             const profile = { email, room, name };
-            await db.collection('users_v3').doc(email).set(profile);
+            await db.collection('users_v4').doc(email).set(profile);
             setUser(profile);
-            localStorage.setItem('ws_elite_v7_session', JSON.stringify(profile));
+            localStorage.setItem('ws_elite_v8_session', JSON.stringify(profile));
             setStep('app');
-        } else {
-            setAlert("Invalid verification code");
-        }
+        } else setAlert("Invalid code");
     };
 
     const updateProfile = async () => {
-        if(!name || !room) return setAlert("All fields are required");
+        if(!name || !room) return setAlert("All fields required");
         setLoading(true);
         try {
-            await db.collection('users_v3').doc(user.email).update({ name, room });
-            setIsEditing(false);
-            setAlert("Profile synced successfully.");
-        } catch(e) {
-            setAlert("Update failed.");
-        } finally { setLoading(false); }
-    };
-
-    const secureSlot = async (time) => {
-        if(isPassed(selDate, time)) return setAlert("This time slot has already passed.");
-
-        if(myBookings.some(b => b.date === selDate)) 
-            return setAlert("Daily Limit: 1 slot per day allowed.");
-
-        const startOfWeek = new Date();
-        startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
-        const weekCount = myBookings.filter(b => b.date >= startOfWeek.toISOString().split('T')[0]).length;
-        if(weekCount >= 3) 
-            return setAlert("Weekly Limit: Max 3 sessions per week.");
-
-        setLoading(true);
-        try {
-            await db.collection('bookings_v7').add({
-                email: user.email,
-                name: user.name,
-                room: user.room,
-                date: selDate,
-                time,
-                timestamp: Date.now()
-            });
-            setAlert("Slot secured! Welcome to the queue.");
-        } catch(e) { setAlert("Connectivity error."); }
+            await db.collection('users_v4').doc(user.email).update({ name, room });
+            setIsEditing(false); setAlert("Profile updated.");
+        } catch(e) { setAlert("Update failed."); }
         finally { setLoading(false); }
     };
 
+    const secureSlot = async (time) => {
+        if(isPassed(selDate, time)) return setAlert("Slot passed.");
+        if(myBookings.some(b => b.date === selDate)) return setAlert("Limit: 1 slot/day.");
+        const startOfWeek = new Date(); startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+        const weekCount = myBookings.filter(b => b.date >= startOfWeek.toISOString().split('T')[0]).length;
+        if(weekCount >= 3) return setAlert("Weekly limit (3) reached.");
+
+        setLoading(true);
+        try {
+            await db.collection('bookings_v8').add({
+                email: user.email, name: user.name, room: user.room,
+                date: selDate, time, timestamp: Date.now()
+            });
+            setAlert("Slot secured!");
+        } catch(e) { setAlert("Booking failed."); }
+        finally { setLoading(false); }
+    };
+
+    const cancelSlot = async (id) => {
+        setLoading(true);
+        try {
+            await db.collection('bookings_v8').doc(id).delete();
+            setAlert("Booking cancelled successfully.");
+        } catch(e) { setAlert("Cancellation failed."); }
+        finally { setLoading(false); }
+    };
+
+    // UI: Login
     if (step !== 'app') {
         return React.createElement('div', {className:'app-container'},
             React.createElement('div', {className:'auth-container'},
                 React.createElement('div', {className:'auth-hero'},
                     React.createElement('div', {className:'auth-logo-icon'}, '🫧'),
                     React.createElement('h1', {style:{fontSize:40, fontWeight:800, letterSpacing:'-1.5px'}}, 'WashSlot Elite'),
-                    React.createElement('p', {style:{color:'var(--text-dim)', marginTop:12, fontSize:16}}, 'Fresh. Ready. Managed.')
+                    React.createElement('p', {style:{color:'var(--text-dim)', marginTop:12, fontSize:16}}, 'Zero data. Fresh start. Professional.')
                 ),
                 step === 'login' && [
                     React.createElement('div', {className:'input-group', key:'e'},
-                        React.createElement('span', {className:'input-label'}, 'IDENTITY ACCESS'),
-                        React.createElement('input', {className:'modern-input', type:'email', placeholder:'Enter Email', value:email, onChange:e=>setEmail(e.target.value)})
+                        React.createElement('span', {className:'input-label'}, 'ACCESS ID'),
+                        React.createElement('input', {className:'modern-input', type:'email', placeholder:'Email Address', value:email, onChange:e=>setEmail(e.target.value)})
                     ),
                     React.createElement('button', {key:'b', className:'btn-prime', onClick:handleInitialAccess, disabled:loading}, loading ? 'Syncing...' : 'Get Started')
                 ],
                 step === 'signup' && [
                     React.createElement('div', {className:'input-group', key:'n'},
-                        React.createElement('span', {className:'input-label'}, 'RESIDENT NAME'),
-                        React.createElement('input', {className:'modern-input', placeholder:'Full Name', value:name, onChange:e=>setName(e.target.value)})
+                        React.createElement('span', {className:'input-label'}, 'FULL NAME'),
+                        React.createElement('input', {className:'modern-input', placeholder:'John Doe', value:name, onChange:e=>setName(e.target.value)})
                     ),
                     React.createElement('div', {className:'input-group', key:'r'},
-                        React.createElement('span', {className:'input-label'}, 'ROOM ASSIGNMENT'),
-                        React.createElement('input', {className:'modern-input', placeholder:'Room #', value:room, onChange:e=>setRoom(e.target.value)})
+                        React.createElement('span', {className:'input-label'}, 'ROOM #'),
+                        React.createElement('input', {className:'modern-input', placeholder:'e.g. 102', value:room, onChange:e=>setRoom(e.target.value)})
                     ),
-                    React.createElement('button', {key:'b', className:'btn-prime', onClick:sendVerification, disabled:loading}, 'Verify Identity')
+                    React.createElement('button', {key:'b', className:'btn-prime', onClick:sendVerification, disabled:loading}, 'Register Account')
                 ],
                 step === 'verify' && [
                     React.createElement('div', {className:'input-group', key:'o'},
-                        React.createElement('span', {className:'input-label'}, 'SECURITY CODE'),
+                        React.createElement('span', {className:'input-label'}, 'OTP'),
                         React.createElement('input', {className:'modern-input', placeholder:'000000', value:otp, onChange:e=>setOtp(e.target.value)})
                     ),
-                    React.createElement('button', {key:'b', className:'btn-prime', onClick:confirmIdentity}, 'Complete Setup')
+                    React.createElement('button', {key:'b', className:'btn-prime', onClick:confirmIdentity}, 'Verify')
                 ]
             ),
             alert && React.createElement('div', {className:'modal-overlay', onClick:()=>setAlert(null)},
                 React.createElement('div', {className:'modal-content'},
                     React.createElement('p', {style:{fontWeight:700, fontSize:18}}, alert),
-                    React.createElement('button', {className:'btn-prime', style:{marginTop:20}}, 'Confirm')
+                    React.createElement('button', {className:'btn-prime', style:{marginTop:20}}, 'Dismiss')
                 )
             )
         );
     }
 
+    // UI: Main
     return React.createElement('div', {className:'app-container'},
         React.createElement('div', {className:'header'},
             React.createElement('h2', {className:'brand-text'}, 'WASHSLOT'),
-            React.createElement('div', {style:{width:40, height:40, background: 'var(--card)', borderRadius: '14px', display:'flex', alignItems:'center', justifyContent:'center'}}, 
+            React.createElement('div', {style:{width:40, height:40, background:'var(--card)', borderRadius:'14px', display:'flex', alignItems:'center', justifyContent:'center'}}, 
                 React.createElement('i', {'data-lucide':'bell', size:20, color:nextBooking ? 'var(--accent)' : 'var(--text-dim)'})
             )
         ),
 
         view === 'home' && [
-            // Status Hero
             React.createElement('div', {key:'h', className:'hero-banner'},
                 React.createElement('div', {className:'status-tag'}, 
                     React.createElement('i', {'data-lucide': nextBooking ? 'clock' : 'layers', size:12}),
-                    nextBooking ? 'PERSONAL NEXT' : `${dayBookingsSorted.length} IN QUEUE TODAY`
+                    nextBooking ? 'UPCOMING SESSION' : `${dayBookingsSorted.length} IN LINE TODAY`
                 ),
                 nextBooking ? [
                     React.createElement('h2', {key:'t', style:{fontSize:36, fontWeight:800, marginBottom:6}}, nextBooking.time),
                     React.createElement('p', {key:'d', style:{color:'var(--text-dim)', fontSize:15, fontWeight:700}}, 
                         new Date(nextBooking.date).toLocaleDateString(undefined, {weekday:'long', month:'short', day:'numeric'})
-                    )
+                    ),
+                    React.createElement('div', {key:'cl', className:'edit-badge', style:{background:'var(--danger)', color:'white', marginTop:16}, onClick:()=>cancelSlot(nextBooking.id)}, 'Cancel This Slot')
                 ] : [
-                    React.createElement('h2', {key:'t', style:{fontSize:28, fontWeight:800}}, 'Join the Queue'),
-                    React.createElement('p', {key:'p', style:{color:'var(--text-dim)', marginTop:8, fontSize:15}}, 'Choose a date to secure your 90min slot.')
+                    React.createElement('h2', {key:'t', style:{fontSize:28, fontWeight:800}}, 'Join the Lineup'),
+                    React.createElement('p', {key:'p', style:{color:'var(--text-dim)', marginTop:8, fontSize:15}}, 'Choose a date to book a 90min cycle.')
                 ]
             ),
 
-            // Live Queue Section
             React.createElement('div', {key:'q', className:'queue-section'},
-                React.createElement('div', {className:'grid-header'}, '🔥 TODAY\'S LINEUP'),
+                React.createElement('div', {className:'grid-header'}, '🔥 TODAY\'S QUEUE'),
                 dayBookingsSorted.length === 0 ? 
-                    React.createElement('p', {style:{fontSize:12, color:'var(--text-dim)', padding:'10px 0'}}, 'No one in the queue yet. Be the first!') :
+                    React.createElement('p', {style:{fontSize:12, color:'var(--text-dim)', padding:'10px 0'}}, 'No active queue for this date.') :
                     React.createElement('div', {className:'queue-list'}, dayBookingsSorted.map(b => 
                         React.createElement('div', {key:b.id, className: `queue-pill ${b.email === user.email ? 'highlight' : ''}`},
                             React.createElement('div', {className:'queue-avatar'}, b.name.charAt(0)),
@@ -525,7 +505,6 @@ function App() {
                     ))
             ),
 
-            // Date Selection
             React.createElement('div', {key:'d'},
                 React.createElement('div', {className:'grid-header'}, '📅 7-DAY WINDOW'),
                 React.createElement('div', {className:'date-strip'}, [0,1,2,3,4,5,6].map(i => {
@@ -541,12 +520,8 @@ function App() {
                 }))
             ),
 
-            // Slots Grid
             React.createElement('div', {key:'s'},
-                React.createElement('div', {className:'grid-header'}, [
-                    React.createElement('span', {key:'l'}, '⚡ 1.5HR OPERATIONS'),
-                    React.createElement('span', {key:'r', style:{fontSize:10, color:'var(--accent)'}}, selDate === todayStr ? 'LIVE' : '')
-                ]),
+                React.createElement('div', {className:'grid-header'}, '⚡ 1.5HR BLOCKS'),
                 React.createElement('div', {className:'slots-grid'}, SLOTS.map(t => {
                     const b = dayBookingsSorted.find(bk => bk.time === t);
                     const isMine = b?.email === user.email;
@@ -559,25 +534,26 @@ function App() {
                         React.createElement('div', {className:'slot-time'}, t),
                         React.createElement('div', {className:'slot-info'}, 
                             passed ? 'PASSED' : (b ? (isMine ? 'YOURS' : `${b.name} (${b.room})`) : 'AVAILABLE')
-                        )
+                        ),
+                        isMine && !passed && React.createElement('div', {className:'cancel-label', onClick:(e)=>{e.stopPropagation(); cancelSlot(b.id)}}, 'CANCEL')
                     );
                 }))
             )
         ],
 
         view === 'history' && React.createElement('div', {style:{padding:22}},
-            React.createElement('h2', {style:{fontSize:26, fontWeight:800, marginBottom:28}}, 'My History'),
+            React.createElement('h2', {style:{fontSize:26, fontWeight:800, marginBottom:28}}, 'Booking History'),
             myBookings.length === 0 ? 
-                React.createElement('div', {style:{textAlign:'center', marginTop:100}},
-                    React.createElement('p', {style:{color:'var(--text-dim)'}}, 'No history yet.')
-                ) :
+                React.createElement('p', {style:{color:'var(--text-dim)', textAlign:'center', marginTop:100}}, 'No bookings found.') :
                 myBookings.sort((a,b) => b.date.localeCompare(a.date)).map(b => 
                     React.createElement('div', {key:b.id, className:'stat-card'},
                         React.createElement('div', null,
                             React.createElement('div', {className:'slot-time'}, b.time),
                             React.createElement('div', {className:'slot-info'}, new Date(b.date).toLocaleDateString(undefined, {month:'short', day:'numeric', weekday:'short'}))
                         ),
-                        React.createElement('div', {style:{color:'var(--accent)', fontWeight:800, fontSize:12}}, 'CONFIRMED')
+                        !isPassed(b.date, b.time) ? 
+                            React.createElement('div', {style:{color:'var(--danger)', fontWeight:800, fontSize:10, cursor:'pointer'}, onClick:()=>cancelSlot(b.id)}, 'CANCEL') :
+                            React.createElement('div', {style:{color:'var(--text-dim)', fontWeight:800, fontSize:10}}, 'COMPLETED')
                     )
                 )
         ),
@@ -587,16 +563,10 @@ function App() {
                 React.createElement('div', {className:'profile-avatar', key:'a'}, user.name?.charAt(0)),
                 React.createElement('h2', {style:{fontSize:28, fontWeight:800}, key:'n'}, user.name),
                 React.createElement('p', {style:{color:'var(--text-dim)', fontSize:15, marginTop:6}, key:'r'}, `Room ${user.room} • ${user.email}`),
-                React.createElement('div', {className:'edit-badge', key:'e', onClick:() => {setName(user.name); setRoom(user.room); setIsEditing(true);}}, 'Edit Profile'),
-                React.createElement('div', {style:{marginTop:40}, key:'s'},
-                    React.createElement('div', {className:'stat-card'},
-                        React.createElement('span', {style:{color:'var(--text-dim)'}}, 'Total Cycles'),
-                        React.createElement('span', {style:{fontWeight:800}}, myBookings.length)
-                    )
-                ),
-                React.createElement('button', {key:'l', className:'logout-action', onClick:()=>{localStorage.clear(); window.location.reload();}}, 'Logout')
+                React.createElement('div', {className:'edit-badge', key:'e', onClick:() => {setName(user.name); setRoom(user.room); setIsEditing(true);}}, 'Edit Identity'),
+                React.createElement('button', {key:'l', className:'logout-action', onClick:()=>{localStorage.clear(); window.location.reload();}}, 'Logout Account')
             ] : [
-                React.createElement('h2', {style:{fontSize:24, fontWeight:800, marginBottom:32}, key:'t'}, 'Edit Identity'),
+                React.createElement('h2', {style:{fontSize:24, fontWeight:800, marginBottom:32}, key:'t'}, 'Update Profile'),
                 React.createElement('div', {className:'input-group', key:'in'},
                     React.createElement('span', {className:'input-label'}, 'NAME'),
                     React.createElement('input', {className:'modern-input', value:name, onChange:e=>setName(e.target.value)})
