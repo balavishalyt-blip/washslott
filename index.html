@@ -188,6 +188,28 @@
             padding: 20px; border-radius: 18px; font-weight: 800; 
             font-size: 16px; width: 100%; cursor: pointer; transition: 0.3s;
         }
+
+        /* Improved Cancel Button Style */
+        .btn-ghost-danger {
+            background: transparent;
+            color: var(--danger);
+            border: 1.5px solid rgba(255, 77, 77, 0.3);
+            padding: 12px 24px;
+            border-radius: 14px;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-top: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-ghost-danger:active {
+            background: rgba(255, 77, 77, 0.1);
+            transform: scale(0.96);
+        }
+
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.92); backdrop-filter: blur(12px); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 24px; }
         .modal-content { 
             background: var(--card); border-radius: 36px; padding: 40px 32px; 
@@ -236,8 +258,9 @@ function App() {
     const [selDate, setSelDate] = useState(new Date().toISOString().split('T')[0]);
     const [timeLeft, setTimeLeft] = useState(null);
     const [activeSlot, setActiveSlot] = useState(null);
+    const [notifState, setNotifState] = useState(() => "Notification" in window ? Notification.permission : "unsupported");
 
-    // Auth States
+    // States
     const [email, setEmail] = useState('');
     const [name, setName] = useState('');
     const [room, setRoom] = useState('');
@@ -246,13 +269,6 @@ function App() {
     const [loading, setLoading] = useState(false);
     const [alert, setAlert] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
-
-    // Notification Permission Request
-    useEffect(() => {
-        if ("Notification" in window && Notification.permission === "default") {
-            Notification.requestPermission();
-        }
-    }, []);
 
     // Sync Fresh Collections (v9 Bookings, v5 Users)
     useEffect(() => {
@@ -331,6 +347,13 @@ function App() {
         return [start, end];
     };
 
+    const requestNotifications = async () => {
+        if (!("Notification" in window)) return setAlert("This browser doesn't support notifications.");
+        const permission = await Notification.requestPermission();
+        setNotifState(permission);
+        if (permission === 'granted') setAlert("Notifications Enabled! We'll alert you 10 mins before slots.");
+    };
+
     const sendNotification = (title, body) => {
         if ("Notification" in window && Notification.permission === "granted") {
             new Notification(title, { body, icon: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%237C3AED'/%3E%3C/svg%3E" });
@@ -338,7 +361,6 @@ function App() {
     };
 
     const formatTime = (seconds) => {
-        const h = Math.floor(seconds / 3600);
         const m = Math.floor((seconds % 3600) / 60);
         const s = seconds % 60;
         return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
@@ -388,7 +410,7 @@ function App() {
         try {
             await emailjs.send(CONFIG.emailjs.service, CONFIG.emailjs.template, { to_email: email, otp: code });
             setStep('verify');
-        } catch(e) { setAlert("Demo Verification: " + code); setStep('verify'); }
+        } catch(e) { setAlert("Verification service busy."); setStep('verify'); }
         finally { setLoading(false); }
     };
 
@@ -491,13 +513,19 @@ function App() {
                 activeSlot ? [
                     React.createElement('div', {key:'t', className:'timer-display'}, formatTime(timeLeft)),
                     React.createElement('p', {key:'l', className:'timer-label'}, 'Time Remaining in Slot'),
-                    React.createElement('div', {key:'cl', className:'edit-badge', style:{background:'rgba(255,255,255,0.1)', color:'white', marginTop:16}, onClick:()=>cancelSlot(activeSlot.id)}, 'End Session Early')
+                    React.createElement('div', {key:'cl', className:'btn-ghost-danger', onClick:()=>cancelSlot(activeSlot.id)}, [
+                        React.createElement('i', {key:'i', 'data-lucide':'x-circle', size:14}),
+                        'End Session Early'
+                    ])
                 ] : (nextBooking ? [
                     React.createElement('h2', {key:'t', style:{fontSize:36, fontWeight:800, marginBottom:6}}, nextBooking.time),
                     React.createElement('p', {key:'d', style:{color:'var(--text-dim)', fontSize:15, fontWeight:700}}, 
                         new Date(nextBooking.date).toLocaleDateString(undefined, {weekday:'long', month:'short', day:'numeric'})
                     ),
-                    React.createElement('div', {key:'cl', className:'edit-badge', style:{background:'var(--danger)', color:'white', marginTop:16}, onClick:()=>cancelSlot(nextBooking.id)}, 'Cancel This Slot')
+                    React.createElement('div', {key:'cl', className:'btn-ghost-danger', onClick:()=>cancelSlot(nextBooking.id)}, [
+                        React.createElement('i', {key:'i', 'data-lucide':'x-circle', size:14}),
+                        'Cancel This Slot'
+                    ])
                 ] : [
                     React.createElement('h2', {key:'t', style:{fontSize:28, fontWeight:800}}, 'Laundry Ready'),
                     React.createElement('p', {key:'p', style:{color:'var(--text-dim)', marginTop:8, fontSize:15}}, 'Pick a date and secure your 90min slot.')
@@ -583,7 +611,22 @@ function App() {
                 React.createElement('div', {className:'profile-avatar', key:'a'}, user.name?.charAt(0)),
                 React.createElement('h2', {style:{fontSize:28, fontWeight:800}, key:'n'}, user.name),
                 React.createElement('p', {style:{color:'var(--text-dim)', fontSize:15, marginTop:6}, key:'r'}, `Room ${user.room} • ${user.email}`),
-                React.createElement('div', {className:'edit-badge', key:'e', onClick:() => {setName(user.name); setRoom(user.room); setIsEditing(true);}}, 'Edit Identity'),
+                
+                React.createElement('div', {style:{display:'flex', gap:10, justifyContent:'center', marginTop:15}, key:'ctrl'},
+                    React.createElement('div', {className:'edit-badge', onClick:() => {setName(user.name); setRoom(user.room); setIsEditing(true);}}, 'Edit Profile'),
+                    notifState !== 'granted' && React.createElement('div', {className:'edit-badge', style:{background:'var(--warning)'}, onClick:requestNotifications}, 'Enable Alerts')
+                ),
+
+                React.createElement('div', {style:{marginTop:40}, key:'s'},
+                    React.createElement('div', {className:'stat-card'},
+                        React.createElement('span', {style:{color:'var(--text-dim)'}}, 'Notification Status'),
+                        React.createElement('span', {style:{color: notifState === 'granted' ? 'var(--success)' : 'var(--danger)', fontWeight:800}}, notifState.toUpperCase())
+                    ),
+                    React.createElement('div', {className:'stat-card'},
+                        React.createElement('span', {style:{color:'var(--text-dim)'}}, 'Total Laundry Cycles'),
+                        React.createElement('span', {style:{fontWeight:800}}, myBookings.length)
+                    )
+                ),
                 React.createElement('button', {key:'l', className:'logout-action', onClick:()=>{localStorage.clear(); window.location.reload();}}, 'Logout Account')
             ] : [
                 React.createElement('h2', {style:{fontSize:24, fontWeight:800, marginBottom:32}, key:'t'}, 'Update Profile'),
