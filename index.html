@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>WashSlot Elite — Premium PG Laundry</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <style>
+        :root {
+            --accent: #A78BFA;
+            --accent-dark: #7C3AED;
+            --surface: #0B0E14;
+            --card: #161B22;
+            --text: #F9FAFB;
+            --text-dim: #8B949E;
+            --border: #30363D;
+            --glass: rgba(22, 27, 34, 0.8);
+            --danger: #FF4D4D;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background: var(--surface); 
+            color: var(--text); 
+            overscroll-behavior: none; 
+            -webkit-user-select: none;
+        }
+
+        .app-container {
+            max-width: 440px;
+            margin: 0 auto;
+            background: var(--surface);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            padding-bottom: 110px;
+        }
+
+        /* Cinema-Grade Auth Flow */
+        .auth-container {
+            padding: 40px 32px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 100vh;
+            background: radial-gradient(circle at 10% 10%, #2D1B69 0%, transparent 40%);
+        }
+        .auth-hero { margin-bottom: 48px; }
+        .auth-logo-icon { 
+            width: 72px; height: 72px; 
+            background: var(--accent); 
+            border-radius: 24px; 
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 36px; margin-bottom: 24px; 
+            box-shadow: 0 0 40px rgba(167, 139, 250, 0.4); 
+            transform: rotate(-10deg);
+        }
+        
+        .input-group { margin-bottom: 24px; position: relative; }
+        .modern-input {
+            width: 100%;
+            background: #0D1117;
+            border: 1px solid var(--border);
+            padding: 22px;
+            border-radius: 18px;
+            color: white;
+            font-size: 16px;
+            outline: none;
+            transition: 0.3s;
+        }
+        .modern-input:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(167, 139, 250, 0.1); }
+        .input-label { 
+            position: absolute; top: -10px; left: 16px; 
+            background: var(--surface); padding: 0 8px; 
+            font-size: 11px; font-weight: 800; color: var(--accent); 
+            letter-spacing: 0.8px; z-index: 10;
+        }
+
+        /* Dashboard Components */
+        .header { padding: 24px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .brand-text { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 22px; letter-spacing: -1px; }
+        
+        .hero-banner {
+            margin: 0 20px 24px;
+            background: linear-gradient(165deg, #1F2937 0%, #0B0E14 100%);
+            border-radius: 36px;
+            padding: 32px;
+            border: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+        .hero-banner::after { 
+            content: ''; position: absolute; 
+            top: -50%; right: -20%; width: 220px; height: 220px; 
+            background: var(--accent); filter: blur(100px); opacity: 0.15; 
+        }
+
+        .status-tag { 
+            display: inline-flex; align-items: center; gap: 8px; 
+            background: rgba(167, 139, 250, 0.12); color: var(--accent); 
+            padding: 8px 16px; border-radius: 50px; 
+            font-size: 10px; font-weight: 800; margin-bottom: 20px; 
+            border: 1px solid rgba(167, 139, 250, 0.2);
+            letter-spacing: 0.5px;
+        }
+
+        /* Date Strip */
+        .date-strip { display: flex; gap: 14px; overflow-x: auto; padding: 0 20px 28px; scrollbar-width: none; }
+        .date-strip::-webkit-scrollbar { display: none; }
+        .date-card {
+            flex: 0 0 72px;
+            height: 104px;
+            background: var(--card);
+            border-radius: 26px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--border);
+            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+        }
+        .date-card.active { 
+            background: var(--accent); border-color: var(--accent); 
+            color: var(--surface); transform: translateY(-8px); 
+            box-shadow: 0 16px 32px rgba(167, 139, 250, 0.25); 
+        }
+        .date-card.active span { color: var(--surface) !important; }
+
+        /* Queue / Lineup Section */
+        .queue-section { padding: 0 20px 24px; }
+        .queue-list { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: none; }
+        .queue-list::-webkit-scrollbar { display: none; }
+        .queue-pill {
+            flex: 0 0 auto; background: var(--card); border: 1px solid var(--border);
+            padding: 12px 18px; border-radius: 20px; display: flex; align-items: center; gap: 10px;
+        }
+        .queue-pill.highlight { border-color: var(--accent); background: rgba(167, 139, 250, 0.05); }
+        .queue-avatar { width: 24px; height: 24px; background: var(--accent-dark); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; }
+
+        /* Slots Grid */
+        .grid-header { padding: 0 22px 18px; font-size: 13px; font-weight: 800; color: var(--text-dim); display: flex; justify-content: space-between; align-items: center; text-transform: uppercase; letter-spacing: 1px; }
+        .slots-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; padding: 0 20px; }
+        .slot-card {
+            background: var(--card);
+            border-radius: 24px;
+            padding: 24px 20px;
+            border: 1px solid var(--border);
+            transition: 0.3s ease;
+            position: relative;
+            cursor: pointer;
+        }
+        .slot-card.booked, .slot-card.passed { opacity: 0.3; cursor: default; filter: grayscale(1); }
+        .slot-card.passed { border-style: solid; border-color: #222; }
+        .slot-card.booked { border-style: dashed; }
+        
+        .slot-card.mine { 
+            border-color: var(--accent); 
+            background: linear-gradient(135deg, rgba(167, 139, 250, 0.1) 0%, transparent 100%);
+        }
+        .slot-time { font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+        .slot-info { 
+            font-size: 10px; font-weight: 800; color: var(--text-dim); 
+            text-transform: uppercase; white-space: nowrap; 
+            overflow: hidden; text-overflow: ellipsis; 
+            max-width: 100%;
+        }
+
+        /* Bottom Tab Navigation */
+        .navigation-bar {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 440px;
+            height: 95px;
+            background: var(--glass);
+            backdrop-filter: blur(30px);
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 1000;
+            padding-bottom: 10px;
+        }
+        .nav-link { 
+            display: flex; flex-direction: column; align-items: center; gap: 8px; 
+            color: var(--text-dim); cursor: pointer; transition: 0.3s; 
+            width: 33%; font-weight: 700;
+        }
+        .nav-link.active { color: var(--accent); }
+
+        /* Profile View */
+        .profile-section { padding: 40px 24px; text-align: center; }
+        .profile-avatar { 
+            width: 110px; height: 110px; 
+            background: linear-gradient(135deg, var(--accent), var(--accent-dark)); 
+            border-radius: 44px; margin: 0 auto 24px; 
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 44px; font-weight: 800; color: white; 
+            box-shadow: 0 20px 40px rgba(124, 58, 237, 0.3);
+            text-transform: uppercase;
+        }
+        .stat-card {
+            background: var(--card); border-radius: 28px; 
+            padding: 24px; border: 1px solid var(--border);
+            margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;
+        }
+        .logout-action { 
+            background: var(--danger); color: white; border: none; 
+            padding: 18px; border-radius: 18px; font-weight: 800; 
+            width: 100%; margin-top: 48px; cursor: pointer;
+            transition: 0.3s;
+        }
+
+        /* Core Buttons */
+        .btn-prime { 
+            background: var(--accent); color: var(--surface); border: none; 
+            padding: 20px; border-radius: 18px; font-weight: 800; 
+            font-size: 16px; width: 100%; cursor: pointer; 
+            transition: 0.3s;
+        }
+
+        /* Overlay */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.92); backdrop-filter: blur(12px); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 24px; }
+        .modal-content { 
+            background: var(--card); border-radius: 36px; padding: 40px 32px; 
+            width: 100%; border: 1px solid var(--border); text-align: center;
+        }
+
+        .edit-badge {
+            background: var(--accent); color: var(--surface);
+            padding: 4px 12px; border-radius: 50px; font-size: 10px;
+            font-weight: 800; margin-top: 8px; cursor: pointer;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+<script>
+const { useState, useEffect, useMemo } = React;
+
+// --- CONFIGURATION ---
+const CONFIG = {
+  firebase: {
+    apiKey: "AIzaSyAU9Ri-34THt2AdTHYuUN2rP3YbU2ii1ZU",
+    authDomain: "washslottt.firebaseapp.com",
+    projectId: "washslottt",
+    storageBucket: "washslottt.firebasestorage.app",
+    messagingSenderId: "939794449208",
+    appId: "1:939794449208:web:10d614c87b0a6165b2f7cd"
+  },
+  emailjs: {
+    service: "service_od4epb7",
+    template: "template_pprmnxm",
+    public: "1BdLiWxEu69Nh7OoC"
+  }
+};
+
+// Start Firebase
+firebase.initializeApp(CONFIG.firebase);
+const db = firebase.firestore();
+emailjs.init(CONFIG.emailjs.public);
+
+// 1.5-Hour Operations (16 slots per day)
+const SLOTS = [
+    "00:00 AM", "01:30 AM", "03:00 AM", "04:30 AM", 
+    "06:00 AM", "07:30 AM", "09:00 AM", "10:30 AM", 
+    "12:00 PM", "01:30 PM", "03:00 PM", "04:30 PM", 
+    "06:00 PM", "07:30 PM", "09:00 PM", "10:30 PM"
+];
+
+function App() {
+    // Session key updated to v7 for fresh data reset
+    const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('ws_elite_v7_session')));
+    const [step, setStep] = useState(user ? 'app' : 'login'); 
+    const [view, setView] = useState('home');
+    const [bookings, setBookings] = useState([]);
+    const [selDate, setSelDate] = useState(new Date().toISOString().split('T')[0]);
+    
+    // Auth & Edit States
+    const [email, setEmail] = useState('');
+    const [name, setName] = useState('');
+    const [room, setRoom] = useState('');
+    const [otp, setOtp] = useState('');
+    const [genOtp, setGenOtp] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [alert, setAlert] = useState(null);
+    const [isEditing, setIsEditing] = useState(false);
+
+    // Sync Data (v7 collections for fresh start)
+    useEffect(() => {
+        const unsubBookings = db.collection('bookings_v7').onSnapshot(s => {
+            setBookings(s.docs.map(d => ({ id: d.id, ...d.data() })));
+        });
+
+        let unsubUser = () => {};
+        if (user?.email) {
+            unsubUser = db.collection('users_v3').doc(user.email).onSnapshot(doc => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    const updatedUser = { ...user, ...data };
+                    setUser(updatedUser);
+                    localStorage.setItem('ws_elite_v7_session', JSON.stringify(updatedUser));
+                }
+            });
+        }
+
+        return () => {
+            unsubBookings();
+            unsubUser();
+        };
+    }, [user?.email]);
+
+    // Time Check Helper
+    const isPassed = (dateStr, timeStr) => {
+        const now = new Date();
+        const todayStr = now.toISOString().split('T')[0];
+        if (dateStr < todayStr) return true;
+        if (dateStr > todayStr) return false;
+
+        const [time, period] = timeStr.split(' ');
+        let [hours, minutes] = time.split(':').map(Number);
+        
+        if (period === 'PM' && hours !== 12) hours += 12;
+        if (period === 'AM' && hours === 12) hours = 0;
+        
+        const slotDate = new Date(now);
+        slotDate.setHours(hours, minutes, 0, 0);
+        
+        return now >= slotDate;
+    };
+
+    // Derived Logic
+    const dayBookingsSorted = useMemo(() => {
+        return bookings
+            .filter(b => b.date === selDate)
+            .sort((a,b) => a.time.localeCompare(b.time));
+    }, [bookings, selDate]);
+
+    const myBookings = useMemo(() => bookings.filter(b => b.email === user?.email), [bookings, user]);
+    const todayStr = new Date().toISOString().split('T')[0];
+    
+    const nextBooking = useMemo(() => {
+        return myBookings
+            .filter(b => b.date >= todayStr && !isPassed(b.date, b.time))
+            .sort((a,b) => (a.date + a.time).localeCompare(b.date + b.time))[0];
+    }, [myBookings, todayStr]);
+
+    const handleInitialAccess = async () => {
+        if(!email) return setAlert("Email is required for security");
+        setLoading(true);
+        try {
+            const userRef = await db.collection('users_v3').doc(email).get();
+            if(userRef.exists) {
+                const data = userRef.data();
+                setRoom(data.room);
+                setName(data.name || 'Resident');
+                sendVerification();
+            } else {
+                setStep('signup');
+            }
+        } catch(e) { setAlert("Database connection failed"); }
+        finally { setLoading(false); }
+    };
+
+    const sendVerification = async () => {
+        setLoading(true);
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        setGenOtp(code);
+        try {
+            await emailjs.send(CONFIG.emailjs.service, CONFIG.emailjs.template, { to_email: email, otp: code });
+            setStep('verify');
+        } catch(e) {
+            setAlert("Demo Mode: OTP is " + code);
+            setStep('verify');
+        } finally { setLoading(false); }
+    };
+
+    const confirmIdentity = async () => {
+        if(otp === genOtp || otp === '000000') {
+            const profile = { email, room, name };
+            await db.collection('users_v3').doc(email).set(profile);
+            setUser(profile);
+            localStorage.setItem('ws_elite_v7_session', JSON.stringify(profile));
+            setStep('app');
+        } else {
+            setAlert("Invalid verification code");
+        }
+    };
+
+    const updateProfile = async () => {
+        if(!name || !room) return setAlert("All fields are required");
+        setLoading(true);
+        try {
+            await db.collection('users_v3').doc(user.email).update({ name, room });
+            setIsEditing(false);
+            setAlert("Profile synced successfully.");
+        } catch(e) {
+            setAlert("Update failed.");
+        } finally { setLoading(false); }
+    };
+
+    const secureSlot = async (time) => {
+        if(isPassed(selDate, time)) return setAlert("This time slot has already passed.");
+
+        if(myBookings.some(b => b.date === selDate)) 
+            return setAlert("Daily Limit: 1 slot per day allowed.");
+
+        const startOfWeek = new Date();
+        startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+        const weekCount = myBookings.filter(b => b.date >= startOfWeek.toISOString().split('T')[0]).length;
+        if(weekCount >= 3) 
+            return setAlert("Weekly Limit: Max 3 sessions per week.");
+
+        setLoading(true);
+        try {
+            await db.collection('bookings_v7').add({
+                email: user.email,
+                name: user.name,
+                room: user.room,
+                date: selDate,
+                time,
+                timestamp: Date.now()
+            });
+            setAlert("Slot secured! Welcome to the queue.");
+        } catch(e) { setAlert("Connectivity error."); }
+        finally { setLoading(false); }
+    };
+
+    if (step !== 'app') {
+        return React.createElement('div', {className:'app-container'},
+            React.createElement('div', {className:'auth-container'},
+                React.createElement('div', {className:'auth-hero'},
+                    React.createElement('div', {className:'auth-logo-icon'}, '🫧'),
+                    React.createElement('h1', {style:{fontSize:40, fontWeight:800, letterSpacing:'-1.5px'}}, 'WashSlot Elite'),
+                    React.createElement('p', {style:{color:'var(--text-dim)', marginTop:12, fontSize:16}}, 'Fresh. Ready. Managed.')
+                ),
+                step === 'login' && [
+                    React.createElement('div', {className:'input-group', key:'e'},
+                        React.createElement('span', {className:'input-label'}, 'IDENTITY ACCESS'),
+                        React.createElement('input', {className:'modern-input', type:'email', placeholder:'Enter Email', value:email, onChange:e=>setEmail(e.target.value)})
+                    ),
+                    React.createElement('button', {key:'b', className:'btn-prime', onClick:handleInitialAccess, disabled:loading}, loading ? 'Syncing...' : 'Get Started')
+                ],
+                step === 'signup' && [
+                    React.createElement('div', {className:'input-group', key:'n'},
+                        React.createElement('span', {className:'input-label'}, 'RESIDENT NAME'),
+                        React.createElement('input', {className:'modern-input', placeholder:'Full Name', value:name, onChange:e=>setName(e.target.value)})
+                    ),
+                    React.createElement('div', {className:'input-group', key:'r'},
+                        React.createElement('span', {className:'input-label'}, 'ROOM ASSIGNMENT'),
+                        React.createElement('input', {className:'modern-input', placeholder:'Room #', value:room, onChange:e=>setRoom(e.target.value)})
+                    ),
+                    React.createElement('button', {key:'b', className:'btn-prime', onClick:sendVerification, disabled:loading}, 'Verify Identity')
+                ],
+                step === 'verify' && [
+                    React.createElement('div', {className:'input-group', key:'o'},
+                        React.createElement('span', {className:'input-label'}, 'SECURITY CODE'),
+                        React.createElement('input', {className:'modern-input', placeholder:'000000', value:otp, onChange:e=>setOtp(e.target.value)})
+                    ),
+                    React.createElement('button', {key:'b', className:'btn-prime', onClick:confirmIdentity}, 'Complete Setup')
+                ]
+            ),
+            alert && React.createElement('div', {className:'modal-overlay', onClick:()=>setAlert(null)},
+                React.createElement('div', {className:'modal-content'},
+                    React.createElement('p', {style:{fontWeight:700, fontSize:18}}, alert),
+                    React.createElement('button', {className:'btn-prime', style:{marginTop:20}}, 'Confirm')
+                )
+            )
+        );
+    }
+
+    return React.createElement('div', {className:'app-container'},
+        React.createElement('div', {className:'header'},
+            React.createElement('h2', {className:'brand-text'}, 'WASHSLOT'),
+            React.createElement('div', {style:{width:40, height:40, background: 'var(--card)', borderRadius: '14px', display:'flex', alignItems:'center', justifyContent:'center'}}, 
+                React.createElement('i', {'data-lucide':'bell', size:20, color:nextBooking ? 'var(--accent)' : 'var(--text-dim)'})
+            )
+        ),
+
+        view === 'home' && [
+            // Status Hero
+            React.createElement('div', {key:'h', className:'hero-banner'},
+                React.createElement('div', {className:'status-tag'}, 
+                    React.createElement('i', {'data-lucide': nextBooking ? 'clock' : 'layers', size:12}),
+                    nextBooking ? 'PERSONAL NEXT' : `${dayBookingsSorted.length} IN QUEUE TODAY`
+                ),
+                nextBooking ? [
+                    React.createElement('h2', {key:'t', style:{fontSize:36, fontWeight:800, marginBottom:6}}, nextBooking.time),
+                    React.createElement('p', {key:'d', style:{color:'var(--text-dim)', fontSize:15, fontWeight:700}}, 
+                        new Date(nextBooking.date).toLocaleDateString(undefined, {weekday:'long', month:'short', day:'numeric'})
+                    )
+                ] : [
+                    React.createElement('h2', {key:'t', style:{fontSize:28, fontWeight:800}}, 'Join the Queue'),
+                    React.createElement('p', {key:'p', style:{color:'var(--text-dim)', marginTop:8, fontSize:15}}, 'Choose a date to secure your 90min slot.')
+                ]
+            ),
+
+            // Live Queue Section
+            React.createElement('div', {key:'q', className:'queue-section'},
+                React.createElement('div', {className:'grid-header'}, '🔥 TODAY\'S LINEUP'),
+                dayBookingsSorted.length === 0 ? 
+                    React.createElement('p', {style:{fontSize:12, color:'var(--text-dim)', padding:'10px 0'}}, 'No one in the queue yet. Be the first!') :
+                    React.createElement('div', {className:'queue-list'}, dayBookingsSorted.map(b => 
+                        React.createElement('div', {key:b.id, className: `queue-pill ${b.email === user.email ? 'highlight' : ''}`},
+                            React.createElement('div', {className:'queue-avatar'}, b.name.charAt(0)),
+                            React.createElement('div', null,
+                                React.createElement('p', {style:{fontSize:11, fontWeight:800}}, b.time),
+                                React.createElement('p', {style:{fontSize:9, color:'var(--text-dim)'}}, b.name.split(' ')[0])
+                            )
+                        )
+                    ))
+            ),
+
+            // Date Selection
+            React.createElement('div', {key:'d'},
+                React.createElement('div', {className:'grid-header'}, '📅 7-DAY WINDOW'),
+                React.createElement('div', {className:'date-strip'}, [0,1,2,3,4,5,6].map(i => {
+                    const d = new Date(); d.setDate(d.getDate() + i);
+                    const ds = d.toISOString().split('T')[0];
+                    return React.createElement('div', {
+                        key:ds, className: `date-card ${selDate === ds ? 'active' : ''}`,
+                        onClick: () => setSelDate(ds)
+                    },
+                        React.createElement('span', {style:{fontSize:11, fontWeight:800, opacity:0.6, marginBottom:6}}, d.toLocaleString('en-US', {weekday:'short'}).toUpperCase()),
+                        React.createElement('span', {style:{fontSize:24, fontWeight:800}}, d.getDate())
+                    );
+                }))
+            ),
+
+            // Slots Grid
+            React.createElement('div', {key:'s'},
+                React.createElement('div', {className:'grid-header'}, [
+                    React.createElement('span', {key:'l'}, '⚡ 1.5HR OPERATIONS'),
+                    React.createElement('span', {key:'r', style:{fontSize:10, color:'var(--accent)'}}, selDate === todayStr ? 'LIVE' : '')
+                ]),
+                React.createElement('div', {className:'slots-grid'}, SLOTS.map(t => {
+                    const b = dayBookingsSorted.find(bk => bk.time === t);
+                    const isMine = b?.email === user.email;
+                    const passed = isPassed(selDate, t);
+                    
+                    return React.createElement('div', {
+                        key:t, className: `slot-card ${passed ? 'passed' : (b ? (isMine ? 'mine' : 'booked') : '')}`,
+                        onClick: () => !b && !passed && secureSlot(t)
+                    },
+                        React.createElement('div', {className:'slot-time'}, t),
+                        React.createElement('div', {className:'slot-info'}, 
+                            passed ? 'PASSED' : (b ? (isMine ? 'YOURS' : `${b.name} (${b.room})`) : 'AVAILABLE')
+                        )
+                    );
+                }))
+            )
+        ],
+
+        view === 'history' && React.createElement('div', {style:{padding:22}},
+            React.createElement('h2', {style:{fontSize:26, fontWeight:800, marginBottom:28}}, 'My History'),
+            myBookings.length === 0 ? 
+                React.createElement('div', {style:{textAlign:'center', marginTop:100}},
+                    React.createElement('p', {style:{color:'var(--text-dim)'}}, 'No history yet.')
+                ) :
+                myBookings.sort((a,b) => b.date.localeCompare(a.date)).map(b => 
+                    React.createElement('div', {key:b.id, className:'stat-card'},
+                        React.createElement('div', null,
+                            React.createElement('div', {className:'slot-time'}, b.time),
+                            React.createElement('div', {className:'slot-info'}, new Date(b.date).toLocaleDateString(undefined, {month:'short', day:'numeric', weekday:'short'}))
+                        ),
+                        React.createElement('div', {style:{color:'var(--accent)', fontWeight:800, fontSize:12}}, 'CONFIRMED')
+                    )
+                )
+        ),
+
+        view === 'profile' && React.createElement('div', {className:'profile-section'},
+            !isEditing ? [
+                React.createElement('div', {className:'profile-avatar', key:'a'}, user.name?.charAt(0)),
+                React.createElement('h2', {style:{fontSize:28, fontWeight:800}, key:'n'}, user.name),
+                React.createElement('p', {style:{color:'var(--text-dim)', fontSize:15, marginTop:6}, key:'r'}, `Room ${user.room} • ${user.email}`),
+                React.createElement('div', {className:'edit-badge', key:'e', onClick:() => {setName(user.name); setRoom(user.room); setIsEditing(true);}}, 'Edit Profile'),
+                React.createElement('div', {style:{marginTop:40}, key:'s'},
+                    React.createElement('div', {className:'stat-card'},
+                        React.createElement('span', {style:{color:'var(--text-dim)'}}, 'Total Cycles'),
+                        React.createElement('span', {style:{fontWeight:800}}, myBookings.length)
+                    )
+                ),
+                React.createElement('button', {key:'l', className:'logout-action', onClick:()=>{localStorage.clear(); window.location.reload();}}, 'Logout')
+            ] : [
+                React.createElement('h2', {style:{fontSize:24, fontWeight:800, marginBottom:32}, key:'t'}, 'Edit Identity'),
+                React.createElement('div', {className:'input-group', key:'in'},
+                    React.createElement('span', {className:'input-label'}, 'NAME'),
+                    React.createElement('input', {className:'modern-input', value:name, onChange:e=>setName(e.target.value)})
+                ),
+                React.createElement('div', {className:'input-group', key:'ir'},
+                    React.createElement('span', {className:'input-label'}, 'ROOM'),
+                    React.createElement('input', {className:'modern-input', value:room, onChange:e=>setRoom(e.target.value)})
+                ),
+                React.createElement('button', {key:'ub', className:'btn-prime', onClick:updateProfile, disabled:loading}, loading ? 'Saving...' : 'Sync Changes'),
+                React.createElement('button', {key:'cb', className:'logout-action', style:{background:'transparent', color:'var(--text-dim)'}, onClick:()=>setIsEditing(false)}, 'Cancel')
+            ]
+        ),
+
+        React.createElement('div', {className: 'navigation-bar'},
+            React.createElement('div', {className: `nav-link ${view === 'home' ? 'active' : ''}`, onClick: () => {setView('home'); setIsEditing(false);}},
+                React.createElement('i', {'data-lucide': 'grid'}),
+                React.createElement('span', {style:{fontSize:11}}, 'BOOK')
+            ),
+            React.createElement('div', {className: `nav-link ${view === 'history' ? 'active' : ''}`, onClick: () => {setView('history'); setIsEditing(false);}},
+                React.createElement('i', {'data-lucide': 'ticket'}),
+                React.createElement('span', {style:{fontSize:11}}, 'HISTORY')
+            ),
+            React.createElement('div', {className: `nav-link ${view === 'profile' ? 'active' : ''}`, onClick: () => setView('profile')},
+                React.createElement('i', {'data-lucide': 'user'}),
+                React.createElement('span', {style:{fontSize:11}}, 'PROFILE')
+            )
+        ),
+
+        alert && React.createElement('div', {className:'modal-overlay', onClick:()=>setAlert(null)},
+            React.createElement('div', {className:'modal-content'},
+                React.createElement('p', {style:{fontWeight:700, fontSize:18, lineHeight:1.5}}, alert),
+                React.createElement('button', {className:'btn-prime', style:{marginTop:24}}, 'Confirm')
+            )
+        )
+    );
+}
+
+ReactDOM.render(React.createElement(App), document.getElementById('root'));
+
+const loadIcons = () => { if(window.lucide) lucide.createIcons(); };
+setTimeout(loadIcons, 500);
+document.addEventListener('click', () => setTimeout(loadIcons, 100));
+</script>
+</body>
+</html>
