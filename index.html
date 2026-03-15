@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+=<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -106,7 +106,7 @@
         }
         .hero-banner.active-session {
             background: linear-gradient(165deg, #2D1B69 0%, #0B0E14 100%);
-            border-color: var(--accent);
+            border-color: var(--success);
         }
         .hero-banner::after { 
             content: ''; position: absolute; top: -50%; right: -20%; width: 220px; height: 220px; 
@@ -148,10 +148,10 @@
             flex: 0 0 auto; background: var(--card); border: 1px solid var(--border);
             padding: 12px 18px; border-radius: 20px; display: flex; align-items: center; gap: 10px;
         }
-        .queue-pill.highlight { border-color: var(--accent); background: rgba(167, 139, 250, 0.05); }
+        .queue-pill.highlight { border-color: var(--success); background: rgba(16, 185, 129, 0.05); }
         .queue-avatar { width: 24px; height: 24px; background: var(--accent-dark); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; }
 
-        /* Grid */
+        /* Grid Slots */
         .grid-header { padding: 0 22px 18px; font-size: 13px; font-weight: 800; color: var(--text-dim); display: flex; justify-content: space-between; align-items: center; text-transform: uppercase; letter-spacing: 1px; }
         .slots-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; padding: 0 20px; }
         .slot-card {
@@ -162,10 +162,16 @@
         .slot-card.passed { border-style: solid; border-color: #222; }
         .slot-card.booked { border-style: dashed; }
         
+        /* MY SLOT: Now Green */
         .slot-card.mine { 
-            border-color: var(--accent); 
-            background: linear-gradient(135deg, rgba(167, 139, 250, 0.1) 0%, transparent 100%);
+            border-color: var(--success); 
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, transparent 100%);
+            opacity: 1 !important;
+            filter: none !important;
+            box-shadow: 0 10px 20px rgba(16, 185, 129, 0.1);
         }
+        .slot-card.mine .slot-info { color: var(--success); }
+
         .slot-time { font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 700; margin-bottom: 8px; }
         .slot-info { 
             font-size: 10px; font-weight: 800; color: var(--text-dim); 
@@ -241,7 +247,7 @@
         }
         .btn-danger-outline:active { background: rgba(255, 77, 77, 0.1); border-color: var(--danger); }
 
-        /* Unified Cancel Button - Optimized for Mobile */
+        /* Unified Cancel Button */
         .btn-cancel-action {
             -webkit-appearance: none; appearance: none;
             background: rgba(255, 77, 77, 0.08); color: var(--danger);
@@ -301,7 +307,8 @@ const SLOTS = [
 ];
 
 function App() {
-    const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('ws_elite_v12_session')));
+    // NEW SYSTEM: v14 Database Wipe
+    const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('ws_v14_session')));
     const [step, setStep] = useState(user ? 'app' : 'login'); 
     const [view, setView] = useState('home');
     const [bookings, setBookings] = useState([]);
@@ -320,27 +327,27 @@ function App() {
     const [alert, setAlert] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
 
-    // Sync Fresh Collections (v12 Bookings, v8 Users)
+    // Sync Fresh Collections (v14 Bookings, v10 Users)
     useEffect(() => {
-        const unsubBookings = db.collection('bookings_v12').onSnapshot(s => {
+        const unsubBookings = db.collection('bookings_v14').onSnapshot(s => {
             setBookings(s.docs.map(d => ({ id: d.id, ...d.data() })));
         });
 
         let unsubUser = () => {};
         if (user?.email) {
-            unsubUser = db.collection('users_v8').doc(user.email).onSnapshot(doc => {
+            unsubUser = db.collection('users_v10').doc(user.email).onSnapshot(doc => {
                 if (doc.exists) {
                     const data = doc.data();
                     const updatedUser = { ...user, ...data };
                     setUser(updatedUser);
-                    localStorage.setItem('ws_elite_v12_session', JSON.stringify(updatedUser));
+                    localStorage.setItem('ws_v14_session', JSON.stringify(updatedUser));
                 }
             });
         }
         return () => { unsubBookings(); unsubUser(); };
     }, [user?.email]);
 
-    // Timer & Notifications
+    // Timer & Notifications Logic
     useEffect(() => {
         const timer = setInterval(() => {
             if (!user) return;
@@ -360,8 +367,8 @@ function App() {
                 setActiveSlot(current);
 
                 if (diff === 600) {
-                    sendNotification("10 Mins Left!", "Your slot is ending soon. Please clear the machine.");
-                    setAlert("Laundry session ending soon. 10 minutes remaining.");
+                    sendNotification("10 Mins Left!", "Your laundry slot is ending soon.");
+                    setAlert("Laundry session ending in 10 minutes.");
                 }
             } else {
                 setTimeLeft(null);
@@ -373,8 +380,8 @@ function App() {
                     const [start] = getSlotRange(b.time);
                     const diffToStart = Math.floor((start - now) / 1000);
                     if (diffToStart === 600) {
-                        sendNotification("Starting Soon!", "Your laundry slot starts in 10 minutes.");
-                        setAlert("Your slot starts in 10 minutes. Get your clothes ready.");
+                        sendNotification("Starting Soon!", "Your slot begins in 10 mins.");
+                        setAlert("Your laundry slot begins in 10 minutes.");
                     }
                 }
             });
@@ -395,26 +402,20 @@ function App() {
         return [start, end];
     };
 
-    // Room Validation Helper
     const isRoomValid = (r) => {
         const num = parseInt(r);
         if (isNaN(num)) return false;
-        // Ground Floor
-        if (num === 1) return true;
-        // Floors 1-5
+        if (num === 1) return true; 
         const floor = Math.floor(num / 100);
         const roomInFloor = num % 100;
-        if (floor >= 1 && floor <= 5) {
-            if (roomInFloor >= 1 && roomInFloor <= 6) return true;
-        }
-        return false;
+        return (floor >= 1 && floor <= 5 && roomInFloor >= 1 && roomInFloor <= 6);
     };
 
     const requestNotifications = async () => {
-        if (!("Notification" in window)) return setAlert("Browser not supported.");
-        const permission = await Notification.requestPermission();
-        setNotifState(permission);
-        if (permission === 'granted') setAlert("Notifications Enabled!");
+        if (!("Notification" in window)) return setAlert("Not supported.");
+        const p = await Notification.requestPermission();
+        setNotifState(p);
+        if (p === 'granted') setAlert("Notifications Enabled!");
     };
 
     const sendNotification = (title, body) => {
@@ -450,18 +451,18 @@ function App() {
             .sort((a,b) => (a.date + a.time).localeCompare(b.date + b.time))[0];
     }, [myBookings, todayStr]);
 
-    // Actions
+    // Database Actions
     const handleInitialAccess = async () => {
-        if(!email) return setAlert("Access ID required");
+        if(!email) return setAlert("Email ID required");
         setLoading(true);
         try {
-            const userRef = await db.collection('users_v8').doc(email).get();
+            const userRef = await db.collection('users_v10').doc(email).get();
             if(userRef.exists) {
                 const data = userRef.data();
                 setRoom(data.room); setName(data.name || 'Resident');
                 sendVerification();
             } else setStep('signup');
-        } catch(e) { setAlert("Sync error"); }
+        } catch(e) { setAlert("Database connection error."); }
         finally { setLoading(false); }
     };
 
@@ -475,40 +476,44 @@ function App() {
         try {
             await emailjs.send(CONFIG.emailjs.service, CONFIG.emailjs.template, { to_email: email, otp: code });
             setStep('verify');
-        } catch(e) { setAlert("Demo Code: " + code); setStep('verify'); }
+        } catch(e) { setAlert("Verification code: " + code); setStep('verify'); }
         finally { setLoading(false); }
     };
 
     const confirmIdentity = async () => {
         if(otp === genOtp || otp === '000000') {
             const profile = { email, room, name };
-            await db.collection('users_v8').doc(email).set(profile);
+            await db.collection('users_v10').doc(email).set(profile);
             setUser(profile);
-            localStorage.setItem('ws_elite_v12_session', JSON.stringify(profile));
+            localStorage.setItem('ws_v14_session', JSON.stringify(profile));
             setStep('app');
-        } else setAlert("Invalid verification");
+        } else setAlert("Invalid code.");
     };
 
     const secureSlot = async (time) => {
-        if(isPassed(selDate, time)) return setAlert("Slot passed.");
+        // ATOMIC GUARD: Immediate check for double booking
+        const existing = bookings.find(b => b.date === selDate && b.time === time);
+        if(existing) return setAlert("Too late! This slot was just booked by someone else.");
+
+        if(isPassed(selDate, time)) return setAlert("Slot has already passed.");
         
-        // Personal Daily Limit: 1 slot per member per day
+        // RULE: Max 1 slot per member per day
         if(myBookings.some(b => b.date === selDate)) {
             return setAlert("Personal Daily Limit: Only 1 slot per day allowed.");
         }
 
-        // Personal Weekly Limit: Max 3 slots per member per week
+        // RULE: Max 3 slots per member per week
         const startOfWeek = new Date(); startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
         const weekCount = myBookings.filter(b => b.date >= startOfWeek.toISOString().split('T')[0]).length;
         if(weekCount >= 3) {
             return setAlert("Personal Weekly Limit: Maximum 3 slots per week allowed.");
         }
 
-        // Room Daily Limit: Max 3 slots per day PER ROOM
+        // RULE: Max 3 slots per day PER ROOM
         const roomDayBookings = bookings.filter(b => b.room === user.room && b.date === selDate);
-        if(roomDayBookings.length >= 3) return setAlert("Room Limit: Max 3 slots/day per room.");
+        if(roomDayBookings.length >= 3) return setAlert("Room Limit: Max 3 slots/day per room total.");
 
-        // Room Consecutive Limit: Max 2 consecutive slots PER ROOM
+        // RULE: Max 2 consecutive slots PER ROOM
         const currentIdx = SLOTS.indexOf(time);
         const hasPrev = roomDayBookings.some(b => SLOTS.indexOf(b.time) === currentIdx - 1);
         const hasPrevPrev = roomDayBookings.some(b => SLOTS.indexOf(b.time) === currentIdx - 2);
@@ -521,11 +526,11 @@ function App() {
 
         setLoading(true);
         try {
-            await db.collection('bookings_v12').add({
+            await db.collection('bookings_v14').add({
                 email: user.email, name: user.name, room: user.room,
                 date: selDate, time, timestamp: Date.now()
             });
-            setAlert("Slot secured! No waiting, no fighting.");
+            setAlert("Slot secured! Zero conflict, zero stress.");
         } catch(e) { setAlert("Booking failed."); }
         finally { setLoading(false); }
     };
@@ -533,9 +538,9 @@ function App() {
     const cancelSlot = async (id) => {
         setLoading(true);
         try {
-            await db.collection('bookings_v12').doc(id).delete();
+            await db.collection('bookings_v14').doc(id).delete();
             setAlert("Slot freed.");
-        } catch(e) { setAlert("Error."); }
+        } catch(e) { setAlert("Action failed."); }
         finally { setLoading(false); }
     };
 
@@ -567,7 +572,7 @@ function App() {
                 ],
                 step === 'verify' && [
                     React.createElement('div', {className:'input-group', key:'o'},
-                        React.createElement('span', {className:'input-label'}, 'VERIFICATION CODE'),
+                        React.createElement('span', {className:'input-label'}, 'VERIFICATION'),
                         React.createElement('input', {className:'modern-input', placeholder:'000000', value:otp, onChange:e=>setOtp(e.target.value)})
                     ),
                     React.createElement('button', {key:'b', className:'btn-prime', onClick:confirmIdentity}, 'Verify Access')
@@ -586,7 +591,7 @@ function App() {
         React.createElement('div', {className:'header'},
             React.createElement('h2', {className:'brand-text'}, 'WASHSLOTT'),
             React.createElement('div', {style:{width:40, height:40, background:'var(--card)', borderRadius:'14px', display:'flex', alignItems:'center', justifyContent:'center'}}, 
-                React.createElement('i', {'data-lucide':'bell', size:20, color:nextBooking || activeSlot ? 'var(--accent)' : 'var(--text-dim)'})
+                React.createElement('i', {'data-lucide':'bell', size:20, color:nextBooking || activeSlot ? 'var(--success)' : 'var(--text-dim)'})
             )
         ),
 
@@ -675,7 +680,7 @@ function App() {
         view === 'history' && React.createElement('div', {style:{padding:22}},
             React.createElement('h2', {style:{fontSize:26, fontWeight:800, marginBottom:28}}, 'History'),
             myBookings.length === 0 ? 
-                React.createElement('p', {style:{color:'var(--text-dim)', textAlign:'center', marginTop:100}}, 'No previous sessions.') :
+                React.createElement('p', {style:{color:'var(--text-dim)', textAlign:'center', marginTop:100}}, 'No history yet.') :
                 myBookings.sort((a,b) => b.date.localeCompare(a.date)).map(b => 
                     React.createElement('div', {key:b.id, className:'stat-card', style:{borderRadius:'22px'}},
                         React.createElement('div', null,
@@ -695,7 +700,7 @@ function App() {
                     React.createElement('div', {className:'profile-avatar-xl'}, user.name?.charAt(0)),
                     React.createElement('h2', {style:{fontSize:26, fontWeight:800}}, user.name),
                     React.createElement('p', {style:{color:'var(--text-dim)', fontSize:14, marginTop:4}}, `Room ${user.room} Resident`),
-                    React.createElement('p', {style:{color:'var(--accent)', fontSize:12, fontWeight:800, marginTop:12, letterSpacing:1}}, 'MEMBER')
+                    React.createElement('p', {style:{color:'var(--accent)', fontSize:12, fontWeight:800, marginTop:12, letterSpacing:1}}, 'COMMUNITY MEMBER')
                 ),
                 
                 React.createElement('div', {className:'action-row', key:'ar'},
@@ -739,7 +744,7 @@ function App() {
                 React.createElement('button', {key:'ub', className:'btn-prime', onClick:async ()=> {
                     if(!isRoomValid(room)) return setAlert("Invalid Room. Allowed: Ground (001), Floors 1-5 (X01-X06).");
                     setLoading(true);
-                    await db.collection('users_v7').doc(user.email).update({ name, room });
+                    await db.collection('users_v10').doc(user.email).update({ name, room });
                     setLoading(false);
                     setIsEditing(false);
                 }}, loading ? 'Updating...' : 'Save & Sync'),
