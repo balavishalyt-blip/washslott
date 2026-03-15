@@ -1,4 +1,4 @@
-=<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -307,12 +307,17 @@ const SLOTS = [
 ];
 
 function App() {
-    // NEW SYSTEM: v14 Database Wipe
-    const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('ws_v14_session')));
+    // UPDATED V15: Clean Data and Fixed Timer formatting
+    const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('ws_v15_session')));
     const [step, setStep] = useState(user ? 'app' : 'login'); 
     const [view, setView] = useState('home');
     const [bookings, setBookings] = useState([]);
-    const [selDate, setSelDate] = useState(new Date().toISOString().split('T')[0]);
+    const [selDate, setSelDate] = useState(() => {
+        const now = new Date();
+        const offset = now.getTimezoneOffset();
+        const local = new Date(now.getTime() - (offset * 60 * 1000));
+        return local.toISOString().split('T')[0];
+    });
     const [timeLeft, setTimeLeft] = useState(null);
     const [activeSlot, setActiveSlot] = useState(null);
     const [notifState, setNotifState] = useState(() => "Notification" in window ? Notification.permission : "unsupported");
@@ -327,20 +332,20 @@ function App() {
     const [alert, setAlert] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
 
-    // Sync Fresh Collections (v14 Bookings, v10 Users)
+    // Sync Fresh Collections (v15 Bookings, v11 Users)
     useEffect(() => {
-        const unsubBookings = db.collection('bookings_v14').onSnapshot(s => {
+        const unsubBookings = db.collection('bookings_v15').onSnapshot(s => {
             setBookings(s.docs.map(d => ({ id: d.id, ...d.data() })));
         });
 
         let unsubUser = () => {};
         if (user?.email) {
-            unsubUser = db.collection('users_v10').doc(user.email).onSnapshot(doc => {
+            unsubUser = db.collection('users_v11').doc(user.email).onSnapshot(doc => {
                 if (doc.exists) {
                     const data = doc.data();
                     const updatedUser = { ...user, ...data };
                     setUser(updatedUser);
-                    localStorage.setItem('ws_v14_session', JSON.stringify(updatedUser));
+                    localStorage.setItem('ws_v15_session', JSON.stringify(updatedUser));
                 }
             });
         }
@@ -352,7 +357,11 @@ function App() {
         const timer = setInterval(() => {
             if (!user) return;
             const now = new Date();
-            const todayStr = now.toISOString().split('T')[0];
+            
+            // Get local today date string
+            const offset = now.getTimezoneOffset();
+            const local = new Date(now.getTime() - (offset * 60 * 1000));
+            const todayStr = local.toISOString().split('T')[0];
             
             const current = bookings.find(b => {
                 if (b.email !== user.email || b.date !== todayStr) return false;
@@ -420,20 +429,26 @@ function App() {
 
     const sendNotification = (title, body) => {
         if ("Notification" in window && Notification.permission === "granted") {
-            new Notification(title, { body, icon: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%237C3AED'/%3E%3C/svg%3E" });
+            new Notification(title, { body, icon: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%2310B981'/%3E%3C/svg%3E" });
         }
     };
 
     const formatTime = (seconds) => {
-        const m = Math.floor((seconds % 3600) / 60);
+        if (!seconds || seconds < 0) return "00:00";
+        // Calculate total minutes correctly for 90-minute blocks
+        const m = Math.floor(seconds / 60);
         const s = seconds % 60;
         return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
     };
 
     const isPassed = (dateStr, timeStr) => {
         const now = new Date();
-        if (dateStr < now.toISOString().split('T')[0]) return true;
-        if (dateStr > now.toISOString().split('T')[0]) return false;
+        const offset = now.getTimezoneOffset();
+        const local = new Date(now.getTime() - (offset * 60 * 1000));
+        const todayStr = local.toISOString().split('T')[0];
+
+        if (dateStr < todayStr) return true;
+        if (dateStr > todayStr) return false;
         const [start] = getSlotRange(timeStr);
         return now >= start;
     };
@@ -443,7 +458,13 @@ function App() {
     }, [bookings, selDate]);
 
     const myBookings = useMemo(() => bookings.filter(b => b.email === user?.email), [bookings, user]);
-    const todayStr = new Date().toISOString().split('T')[0];
+    
+    const todayStr = useMemo(() => {
+        const now = new Date();
+        const offset = now.getTimezoneOffset();
+        const local = new Date(now.getTime() - (offset * 60 * 1000));
+        return local.toISOString().split('T')[0];
+    }, []);
     
     const nextBooking = useMemo(() => {
         return myBookings
@@ -456,7 +477,7 @@ function App() {
         if(!email) return setAlert("Email ID required");
         setLoading(true);
         try {
-            const userRef = await db.collection('users_v10').doc(email).get();
+            const userRef = await db.collection('users_v11').doc(email).get();
             if(userRef.exists) {
                 const data = userRef.data();
                 setRoom(data.room); setName(data.name || 'Resident');
@@ -476,44 +497,39 @@ function App() {
         try {
             await emailjs.send(CONFIG.emailjs.service, CONFIG.emailjs.template, { to_email: email, otp: code });
             setStep('verify');
-        } catch(e) { setAlert("Verification code: " + code); setStep('verify'); }
+        } catch(e) { setAlert("Demo Code: " + code); setStep('verify'); }
         finally { setLoading(false); }
     };
 
     const confirmIdentity = async () => {
         if(otp === genOtp || otp === '000000') {
             const profile = { email, room, name };
-            await db.collection('users_v10').doc(email).set(profile);
+            await db.collection('users_v11').doc(email).set(profile);
             setUser(profile);
-            localStorage.setItem('ws_v14_session', JSON.stringify(profile));
+            localStorage.setItem('ws_v15_session', JSON.stringify(profile));
             setStep('app');
         } else setAlert("Invalid code.");
     };
 
     const secureSlot = async (time) => {
-        // ATOMIC GUARD: Immediate check for double booking
         const existing = bookings.find(b => b.date === selDate && b.time === time);
         if(existing) return setAlert("Too late! This slot was just booked by someone else.");
 
         if(isPassed(selDate, time)) return setAlert("Slot has already passed.");
         
-        // RULE: Max 1 slot per member per day
         if(myBookings.some(b => b.date === selDate)) {
-            return setAlert("Personal Daily Limit: Only 1 slot per day allowed.");
+            return setAlert("Daily Limit: Only 1 slot per day allowed.");
         }
 
-        // RULE: Max 3 slots per member per week
         const startOfWeek = new Date(); startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
-        const weekCount = myBookings.filter(b => b.date >= startOfWeek.toISOString().split('T')[0]).length;
-        if(weekCount >= 3) {
-            return setAlert("Personal Weekly Limit: Maximum 3 slots per week allowed.");
+        const weekCount = myBookings.filter(b => b.date >= todayStr).length; // Reset logic check
+        if(myBookings.filter(b => b.date >= startOfWeek.toISOString().split('T')[0]).length >= 3) {
+            return setAlert("Weekly Limit: Maximum 3 slots per week allowed.");
         }
 
-        // RULE: Max 3 slots per day PER ROOM
         const roomDayBookings = bookings.filter(b => b.room === user.room && b.date === selDate);
         if(roomDayBookings.length >= 3) return setAlert("Room Limit: Max 3 slots/day per room total.");
 
-        // RULE: Max 2 consecutive slots PER ROOM
         const currentIdx = SLOTS.indexOf(time);
         const hasPrev = roomDayBookings.some(b => SLOTS.indexOf(b.time) === currentIdx - 1);
         const hasPrevPrev = roomDayBookings.some(b => SLOTS.indexOf(b.time) === currentIdx - 2);
@@ -526,11 +542,11 @@ function App() {
 
         setLoading(true);
         try {
-            await db.collection('bookings_v14').add({
+            await db.collection('bookings_v15').add({
                 email: user.email, name: user.name, room: user.room,
                 date: selDate, time, timestamp: Date.now()
             });
-            setAlert("Slot secured! Zero conflict, zero stress.");
+            setAlert("Slot secured! No waiting, no fighting.");
         } catch(e) { setAlert("Booking failed."); }
         finally { setLoading(false); }
     };
@@ -538,7 +554,7 @@ function App() {
     const cancelSlot = async (id) => {
         setLoading(true);
         try {
-            await db.collection('bookings_v14').doc(id).delete();
+            await db.collection('bookings_v15').doc(id).delete();
             setAlert("Slot freed.");
         } catch(e) { setAlert("Action failed."); }
         finally { setLoading(false); }
@@ -642,7 +658,9 @@ function App() {
                 React.createElement('div', {className:'grid-header'}, '📅 7-DAY WINDOW'),
                 React.createElement('div', {className:'date-strip'}, [0,1,2,3,4,5,6].map(i => {
                     const d = new Date(); d.setDate(d.getDate() + i);
-                    const ds = d.toISOString().split('T')[0];
+                    const offset = d.getTimezoneOffset();
+                    const local = new Date(d.getTime() - (offset * 60 * 1000));
+                    const ds = local.toISOString().split('T')[0];
                     return React.createElement('div', {
                         key:ds, className: `date-card ${selDate === ds ? 'active' : ''}`,
                         onClick: () => setSelDate(ds)
@@ -680,7 +698,7 @@ function App() {
         view === 'history' && React.createElement('div', {style:{padding:22}},
             React.createElement('h2', {style:{fontSize:26, fontWeight:800, marginBottom:28}}, 'History'),
             myBookings.length === 0 ? 
-                React.createElement('p', {style:{color:'var(--text-dim)', textAlign:'center', marginTop:100}}, 'No history yet.') :
+                React.createElement('p', {style:{color:'var(--text-dim)', textAlign:'center', marginTop:100}}, 'No previous sessions.') :
                 myBookings.sort((a,b) => b.date.localeCompare(a.date)).map(b => 
                     React.createElement('div', {key:b.id, className:'stat-card', style:{borderRadius:'22px'}},
                         React.createElement('div', null,
@@ -700,13 +718,13 @@ function App() {
                     React.createElement('div', {className:'profile-avatar-xl'}, user.name?.charAt(0)),
                     React.createElement('h2', {style:{fontSize:26, fontWeight:800}}, user.name),
                     React.createElement('p', {style:{color:'var(--text-dim)', fontSize:14, marginTop:4}}, `Room ${user.room} Resident`),
-                    React.createElement('p', {style:{color:'var(--accent)', fontSize:12, fontWeight:800, marginTop:12, letterSpacing:1}}, 'COMMUNITY MEMBER')
+                    React.createElement('p', {style:{color:'var(--success)', fontSize:12, fontWeight:800, marginTop:12, letterSpacing:1}}, 'COMMUNITY MEMBER')
                 ),
                 
                 React.createElement('div', {className:'action-row', key:'ar'},
                     React.createElement('div', {className:'action-chip', onClick:() => {setName(user.name); setRoom(user.room); setIsEditing(true);}},
                         React.createElement('i', {'data-lucide':'edit-3', size:20}),
-                        React.createElement('span', {className:'action-label'}, 'Edit Info')
+                        React.createElement('span', {actionLabel: true, className:'action-label'}, 'Edit Info')
                     ),
                     React.createElement('div', {className:'action-chip', onClick:requestNotifications},
                         React.createElement('i', {'data-lucide': notifState === 'granted' ? 'bell-ring' : 'bell-off', size:20, color: notifState === 'granted' ? 'var(--success)' : 'var(--accent)'}),
@@ -744,7 +762,7 @@ function App() {
                 React.createElement('button', {key:'ub', className:'btn-prime', onClick:async ()=> {
                     if(!isRoomValid(room)) return setAlert("Invalid Room. Allowed: Ground (001), Floors 1-5 (X01-X06).");
                     setLoading(true);
-                    await db.collection('users_v10').doc(user.email).update({ name, room });
+                    await db.collection('users_v11').doc(user.email).update({ name, room });
                     setLoading(false);
                     setIsEditing(false);
                 }}, loading ? 'Updating...' : 'Save & Sync'),
