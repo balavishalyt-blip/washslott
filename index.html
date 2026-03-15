@@ -162,7 +162,6 @@
         .slot-card.passed { border-style: solid; border-color: #222; }
         .slot-card.booked { border-style: dashed; }
         
-        /* MY SLOT: Now Green */
         .slot-card.mine { 
             border-color: var(--success); 
             background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, transparent 100%);
@@ -184,6 +183,31 @@
             color: var(--danger); font-size: 9px; font-weight: 800;
             padding: 4px 8px; background: rgba(255, 77, 77, 0.1);
             border-radius: 8px; cursor: pointer;
+        }
+
+        /* History Redesign */
+        .history-card {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 28px; padding: 20px; margin-bottom: 16px;
+            display: flex; justify-content: space-between; align-items: center;
+            position: relative;
+        }
+        .history-info { display: flex; flex-direction: column; gap: 4px; }
+        .history-date { font-size: 11px; font-weight: 800; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
+        .history-time { font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 700; }
+        .history-status-badge {
+            font-size: 9px; font-weight: 800; padding: 6px 12px; border-radius: 50px;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .badge-completed { background: rgba(255,255,255,0.05); color: var(--text-dim); border: 1px solid var(--border); }
+        .badge-upcoming { background: rgba(167, 139, 250, 0.1); color: var(--accent); border: 1px solid rgba(167, 139, 250, 0.2); }
+        .badge-live { background: rgba(16, 185, 129, 0.1); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.3); }
+
+        .btn-cancel-mini {
+            background: rgba(255, 77, 77, 0.1); color: var(--danger);
+            border: none; padding: 10px 14px; border-radius: 12px;
+            font-size: 10px; font-weight: 800; cursor: pointer;
+            margin-top: 10px; display: inline-flex; align-items: center; gap: 4px;
         }
 
         /* Navigation */
@@ -307,7 +331,7 @@ const SLOTS = [
 ];
 
 function App() {
-    // UPDATED V15: Clean Data and Fixed Timer formatting
+    // MAINTAINING V15: Preserving existing data/session
     const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('ws_v15_session')));
     const [step, setStep] = useState(user ? 'app' : 'login'); 
     const [view, setView] = useState('home');
@@ -417,7 +441,8 @@ function App() {
         if (num === 1) return true; 
         const floor = Math.floor(num / 100);
         const roomInFloor = num % 100;
-        return (floor >= 1 && floor <= 5 && roomInFloor >= 1 && roomInFloor <= 6);
+        // UPDATED: Now supports Floor 6
+        return (floor >= 1 && floor <= 6 && roomInFloor >= 1 && roomInFloor <= 6);
     };
 
     const requestNotifications = async () => {
@@ -435,7 +460,6 @@ function App() {
 
     const formatTime = (seconds) => {
         if (!seconds || seconds < 0) return "00:00";
-        // Calculate total minutes correctly for 90-minute blocks
         const m = Math.floor(seconds / 60);
         const s = seconds % 60;
         return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
@@ -489,7 +513,7 @@ function App() {
 
     const sendVerification = async () => {
         if(step === 'signup' && !isRoomValid(room)) {
-            return setAlert("Invalid Room. Allowed: Ground (001), Floors 1-5 (X01-X06).");
+            return setAlert("Invalid Room. Allowed: Ground (001), Floors 1-6 (X01-X06).");
         }
         setLoading(true);
         const code = Math.floor(100000 + Math.random() * 900000).toString();
@@ -522,7 +546,6 @@ function App() {
         }
 
         const startOfWeek = new Date(); startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
-        const weekCount = myBookings.filter(b => b.date >= todayStr).length; // Reset logic check
         if(myBookings.filter(b => b.date >= startOfWeek.toISOString().split('T')[0]).length >= 3) {
             return setAlert("Weekly Limit: Maximum 3 slots per week allowed.");
         }
@@ -582,7 +605,7 @@ function App() {
                     ),
                     React.createElement('div', {className:'input-group', key:'r'},
                         React.createElement('span', {className:'input-label'}, 'ROOM ASSIGNMENT'),
-                        React.createElement('input', {className:'modern-input', placeholder:'e.g. 001, 102, 506', value:room, onChange:e=>setRoom(e.target.value)})
+                        React.createElement('input', {className:'modern-input', placeholder:'e.g. 001, 102, 606', value:room, onChange:e=>setRoom(e.target.value)})
                     ),
                     React.createElement('button', {key:'b', className:'btn-prime', onClick:sendVerification, disabled:loading}, 'Register & Secure')
                 ],
@@ -607,7 +630,7 @@ function App() {
         React.createElement('div', {className:'header'},
             React.createElement('h2', {className:'brand-text'}, 'WASHSLOTT'),
             React.createElement('div', {style:{width:40, height:40, background:'var(--card)', borderRadius:'14px', display:'flex', alignItems:'center', justifyContent:'center'}}, 
-                React.createElement('i', {'data-lucide':'bell', size:20, color:nextBooking || activeSlot ? 'var(--success)' : 'var(--text-dim)'})
+                React.createElement('i', {'data-lucide':'bell', size:20, color:nextBooking || activeSlot ? 'var(--accent)' : 'var(--text-dim)'})
             )
         ),
 
@@ -696,20 +719,35 @@ function App() {
         ],
 
         view === 'history' && React.createElement('div', {style:{padding:22}},
-            React.createElement('h2', {style:{fontSize:26, fontWeight:800, marginBottom:28}}, 'History'),
+            React.createElement('h2', {style:{fontSize:26, fontWeight:800, marginBottom:28}}, 'Booking History'),
             myBookings.length === 0 ? 
                 React.createElement('p', {style:{color:'var(--text-dim)', textAlign:'center', marginTop:100}}, 'No previous sessions.') :
-                myBookings.sort((a,b) => b.date.localeCompare(a.date)).map(b => 
-                    React.createElement('div', {key:b.id, className:'stat-card', style:{borderRadius:'22px'}},
-                        React.createElement('div', null,
-                            React.createElement('div', {className:'slot-time'}, b.time),
-                            React.createElement('div', {className:'slot-info'}, new Date(b.date).toLocaleDateString(undefined, {month:'short', day:'numeric', weekday:'short'}))
+                myBookings.sort((a,b) => (b.date + b.time).localeCompare(a.date + a.time)).map(b => {
+                    const passed = isPassed(b.date, b.time);
+                    const [start, end] = getSlotRange(b.time);
+                    const isNow = new Date() >= start && new Date() < end && b.date === todayStr;
+
+                    return React.createElement('div', {key:b.id, className:'history-card'},
+                        React.createElement('div', {className:'history-info'},
+                            React.createElement('span', {className:'history-date'}, 
+                                new Date(b.date).toLocaleDateString(undefined, {month:'short', day:'numeric', weekday:'short'})
+                            ),
+                            React.createElement('span', {className:'history-time'}, b.time),
+                            !passed && React.createElement('button', {className:'btn-cancel-mini', onClick:()=>cancelSlot(b.id)}, [
+                                React.createElement('i', {key:'i', 'data-lucide':'x', size:12}),
+                                'Cancel Booking'
+                            ])
                         ),
-                        !isPassed(b.date, b.time) ? 
-                            React.createElement('div', {style:{color:'var(--danger)', fontWeight:800, fontSize:10, cursor:'pointer'}, onClick:()=>cancelSlot(b.id)}, 'CANCEL') :
-                            React.createElement('div', {style:{color:'var(--text-dim)', fontWeight:800, fontSize:10}}, 'COMPLETED')
-                    )
-                )
+                        React.createElement('div', null,
+                            isNow ? 
+                                React.createElement('span', {className:'history-status-badge badge-live'}, 'IN PROGRESS') :
+                                (passed ? 
+                                    React.createElement('span', {className:'history-status-badge badge-completed'}, 'COMPLETED') :
+                                    React.createElement('span', {className:'history-status-badge badge-upcoming'}, 'UPCOMING')
+                                )
+                        )
+                    );
+                })
         ),
 
         view === 'profile' && React.createElement('div', {className:'profile-container'},
@@ -724,7 +762,7 @@ function App() {
                 React.createElement('div', {className:'action-row', key:'ar'},
                     React.createElement('div', {className:'action-chip', onClick:() => {setName(user.name); setRoom(user.room); setIsEditing(true);}},
                         React.createElement('i', {'data-lucide':'edit-3', size:20}),
-                        React.createElement('span', {actionLabel: true, className:'action-label'}, 'Edit Info')
+                        React.createElement('span', {className:'action-label'}, 'Edit Info')
                     ),
                     React.createElement('div', {className:'action-chip', onClick:requestNotifications},
                         React.createElement('i', {'data-lucide': notifState === 'granted' ? 'bell-ring' : 'bell-off', size:20, color: notifState === 'granted' ? 'var(--success)' : 'var(--accent)'}),
@@ -760,7 +798,7 @@ function App() {
                     React.createElement('input', {className:'modern-input', value:room, onChange:e=>setRoom(e.target.value)})
                 ),
                 React.createElement('button', {key:'ub', className:'btn-prime', onClick:async ()=> {
-                    if(!isRoomValid(room)) return setAlert("Invalid Room. Allowed: Ground (001), Floors 1-5 (X01-X06).");
+                    if(!isRoomValid(room)) return setAlert("Invalid Room. Allowed: Ground (001), Floors 1-6 (X01-X06).");
                     setLoading(true);
                     await db.collection('users_v11').doc(user.email).update({ name, room });
                     setLoading(false);
